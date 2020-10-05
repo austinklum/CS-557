@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -11,7 +12,7 @@ public class DecisionTree
 	private boolean shouldPrint = false;
 	
 	private List<String[]> examples;
-	private String[][] features;
+	private ArrayList<ArrayList<String>> features;
 	private Tree root;
 	
 	public DecisionTree(int i, int l, int t, boolean shouldPrint)
@@ -21,6 +22,7 @@ public class DecisionTree
 		this.t = t;
 		this.shouldPrint = shouldPrint;
 		initAttributes();
+		
 	}
 	
 	public DecisionTree(String[] args)
@@ -59,8 +61,9 @@ public class DecisionTree
 	
 	private void initAttributes()
 	{
-		//features = new String[][];
-		// last one is poison status
+		features = new ArrayList<ArrayList<String>>();
+		features.get(0).get(0);
+		Scanner scan = new Scanner(new File("properties.txt"));
 	}
 	
 	public void processFile(File file)
@@ -115,10 +118,10 @@ public class DecisionTree
 			Tree tree = new Tree(predictAttr);
 			for(Value v in predictAttr)
 			{
-				 List<String[]> exs = getExamplesByValue()
-				 List<Attribute> filteredAttr = attributes.removeAll(predictAttr);
-				 Tree subTree = DecisionTreeLearning(exs, filteredAttr, examples);
-				 tree.addBranch(subTree);
+				 List<String[]> exs = getExamplesByValue(examples, predictAttr, v);
+				 List<Integer> filteredAttr = attributes.remove(predictAttr);
+				 Tree subTree = learnDecisionTree(exs, filteredAttr, examples);
+				 tree.addChild(subTree);
 			}
 			return tree;
 		}
