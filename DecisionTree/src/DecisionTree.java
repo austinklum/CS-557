@@ -1,13 +1,18 @@
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
 
-public class DecisionTree {
-	private int i;
-	private int l;
-	private int t;
-	private boolean shouldPrint;
+public class DecisionTree 
+{
+	private int i = 10;
+	private int l = 100;
+	private int t = 20;
+	private boolean shouldPrint = false;
+	
+	private List<String[]> examples;
+	private String[][] features;
+	private Tree root;
 	
 	public DecisionTree(int i, int l, int t, boolean shouldPrint)
 	{
@@ -15,11 +20,13 @@ public class DecisionTree {
 		this.l = l;
 		this.t = t;
 		this.shouldPrint = shouldPrint;
+		initAttributes();
 	}
 	
 	public DecisionTree(String[] args)
 	{
 		processArgs(args);
+		initAttributes();
 	}
 
 	private void processArgs(String[] args)
@@ -50,6 +57,12 @@ public class DecisionTree {
 		
 	}
 	
+	private void initAttributes()
+	{
+		//features = new String[][];
+		// last one is poison status
+	}
+	
 	public void processFile(File file)
 	{
 		try {
@@ -62,8 +75,69 @@ public class DecisionTree {
 	private void tryToProcessFile(File file) throws IOException
 	{
 		Scanner scan = new Scanner(file);
+		String line = scan.nextLine();
 		
+		examples.add(line.split(" "));
 		
 		scan.close();
+	}
+	
+	private boolean isPosion(String[] features)
+	{
+		return features[features.length - 1].equals("p");
+	}
+	
+	public void run()
+	{
+		for (int k = 0; k*i < l; k++)
+		{
+			
+		}
+	}
+	
+	private Tree learnDecisionTree(List<String[]> examples, List<String[]> attributes, List<String[]>parentExamples)
+	{
+		if (examples.isEmpty())
+		{
+			return pluralityValue(parentExamples);
+		}
+		else if (allExamplesHaveSameClassification(examples))
+		{
+			return null;
+		}
+		else if (attributes.isEmpty())
+		{
+			return pluralityValue(examples);
+		}
+		else
+		{
+			int predictAttr = findAttributeWithHighestImportance(examples);
+			Tree tree = new Tree(predictAttr);
+			for(Value v in predictAttr)
+			{
+				 List<String[]> exs = getExamplesByValue()
+				 List<Attribute> filteredAttr = attributes.removeAll(predictAttr);
+				 Tree subTree = DecisionTreeLearning(exs, filteredAttr, examples);
+				 tree.addBranch(subTree);
+			}
+			return tree;
+		}
+		return null;
+	}
+	
+	private Tree pluralityValue(List<String[]> parentExamples)
+	{
+		Tree node = new Tree(-1);
+		return null; 
+	}
+	
+	private boolean allExamplesHaveSameClassification(List<String[]> examples)
+	{
+		return false;
+	}
+	
+	private int findAttributeWithHighestImportance(List<String[]> examples)
+	{
+		return -1;
 	}
 }
