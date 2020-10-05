@@ -143,7 +143,7 @@ public class DecisionTree
 		else
 		{
 			int predictAttr = findAttributeWithHighestImportance(examples);
-			Tree tree = new Tree(attributes.get(predictAttr));
+			Tree tree = new Tree(examples, attributes.get(predictAttr), predictAttr);
 			for(String possibleValue : attributes.get(predictAttr).getPossibleValues())
 			{
 				 List<Example> filteredExamples = examples
@@ -205,10 +205,7 @@ public class DecisionTree
 	
 	private int findAttributeWithHighestImportance(List<Example> examples)
 	{
-		for(Attribute attr : examples)
-		{
-			
-		}
+		
 		return -1;
 	}
 }

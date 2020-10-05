@@ -1,5 +1,7 @@
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Tree {
 	
@@ -7,9 +9,12 @@ public class Tree {
 	private Attribute attribute;
 	private Tree parent;
 	private boolean isPosion;
+	private int attributeIndex;
+	private List<Example> examples;
 	
-	public Tree(Attribute attribute)
+	public Tree(List<Example> examples, Attribute attribute, int attributeIndex)
 	{
+		this.examples = new LinkedList<Example>();
 		this.attribute = attribute;
 		children = new ArrayList<Tree>();
 	}
@@ -45,6 +50,21 @@ public class Tree {
 	public Attribute getAttribute()
 	{
 		return attribute;
+	}
+	
+	public Tree splitOnAttribute()
+	{
+		Tree tree = new Tree(examples, attribute, attributeIndex);
+		List<String> possibleValues = attribute.getPossibleValues();
+		for (String possibleValue : possibleValues)                                                                                                                                                                                                                                                                    
+		{
+			List<Example> filteredExamples = examples
+					.stream()
+					.filter(ex -> ex.getAttributeAt(attributeIndex).equals(possibleValue))
+					.collect(Collectors.toList());
+			this.children.add(new Tree(filteredExamples, attribute, attributeIndex));
+		}
+		return tree;
 	}
 	
 }
