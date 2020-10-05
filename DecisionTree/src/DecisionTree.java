@@ -143,7 +143,7 @@ public class DecisionTree
 		else
 		{
 			int predictAttr = findAttributeWithHighestImportance(examples);
-			Tree tree = new Tree(predictAttr);
+			Tree tree = new Tree(attributes.get(predictAttr));
 			for(String possibleValue : attributes.get(predictAttr).getPossibleValues())
 			{
 				 List<Example> filteredExamples = examples
@@ -164,13 +164,13 @@ public class DecisionTree
 	
 	private Tree pluralityValue(List<Example> parentExamples)
 	{
-		Tree node = new Tree(-1);
+	
 		return null; 
 	}
 	
 	private boolean allExamplesHaveSameClassification(List<Example> examples)
 	{
-		return false;
+		return examples.stream().filter(ex -> ex.isPosion()).count() == examples.size();
 	}
 	
 	private int findAttributeWithHighestImportance(List<Example> examples)
