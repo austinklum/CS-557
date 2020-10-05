@@ -2,8 +2,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
@@ -164,17 +164,51 @@ public class DecisionTree
 	
 	private Tree pluralityValue(List<Example> examples)
 	{
+		long poisonCount = examples.stream().filter(ex -> ex.isPosion()).count();
+		long difference = examples.size() - poisonCount; // negative means poison count is larger
 		
-		return null; 
+		if (difference != 0)
+		{
+			return new Tree(difference < 0);
+		}
+		
+		Random rand = new Random();
+		return new Tree(rand.nextBoolean()); 
+	}
+	
+	private long getPosionClassificationCount(List<Example> examples)
+	{
+		return examples.stream().filter(Example::isPosion).count();
 	}
 	
 	private boolean allExamplesHaveSameClassification(List<Example> examples)
 	{
-		return examples.stream().filter(ex -> ex.isPosion()).count() == examples.size();
+		return getPosionClassificationCount(examples) == examples.size();
+	}
+	
+	private double getEntropy(Tree tree, List<Example> examples)
+	{
+		long p = getPosionClassificationCount(examples);
+		long n = examples.stream().filter(ex -> !ex.isPosion()).count();
+		double ppn = p / (p+n);
+		double npn = n / (p+n);
+		
+		double entropy = - ppn * log2(ppn) - npn * log2(npn); 
+		
+		return entropy;
+	}
+	
+	public static double log2(double npn)
+	{
+		return (double) (Math.log(npn) / Math.log(2));
 	}
 	
 	private int findAttributeWithHighestImportance(List<Example> examples)
 	{
+		for(Attribute attr : examples)
+		{
+			
+		}
 		return -1;
 	}
 }
