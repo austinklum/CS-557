@@ -11,8 +11,8 @@ public class DecisionTree
 	private int t = 20;
 	private boolean shouldPrint = false;
 	
-	private List<String[]> examples;
-	private ArrayList<ArrayList<String>> features;
+	private List<Example> examples;
+	private List<Attribute> features;
 	private Tree root;
 	
 	public DecisionTree(int i, int l, int t, boolean shouldPrint)
@@ -61,7 +61,7 @@ public class DecisionTree
 	
 	private void initAttributes()
 	{
-		features = new ArrayList<ArrayList<String>>();
+		features = new List<Attribute>();
 		features.get(0).get(0);
 		Scanner scan = new Scanner(new File("properties.txt"));
 	}
