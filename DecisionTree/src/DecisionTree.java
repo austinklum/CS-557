@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class DecisionTree 
 {
@@ -135,7 +136,7 @@ public class DecisionTree
 		}
 	}
 	
-	private Tree learnDecisionTree(List<String[]> examples, List<String[]> attributes, List<String[]>parentExamples)
+	private Tree learnDecisionTree(List<Example> examples, List<Attribute> attributes, List<Example>parentExamples)
 	{
 		if (examples.isEmpty())
 		{
@@ -153,30 +154,35 @@ public class DecisionTree
 		{
 			int predictAttr = findAttributeWithHighestImportance(examples);
 			Tree tree = new Tree(predictAttr);
-			for(Value v in predictAttr)
+			for(String possibleValue : features.get(predictAttr))
 			{
-				 List<String[]> exs = getExamplesByValue(examples, predictAttr, v);
-				 List<Integer> filteredAttr = attributes.remove(predictAttr);
-				 Tree subTree = learnDecisionTree(exs, filteredAttr, examples);
+				 List<Example> filteredExamples = examples
+						 .stream()
+						 .filter(ex -> ex.getAttributeAt(predictAttr).getValue().equals(possibleValue))
+						 .collect(Collectors.toList());
+				 List<Attribute> filteredAttributes = attributes
+						 .stream()
+						 .filter(attr -> attr.getPosition() != predictAttr)
+						 .collect(Collectors.toList());
+				 Tree subTree = learnDecisionTree(filteredExamples, filteredAttributes, examples);
 				 tree.addChild(subTree);
 			}
 			return tree;
 		}
-		return null;
 	}
 	
-	private Tree pluralityValue(List<String[]> parentExamples)
+	private Tree pluralityValue(List<Example> parentExamples)
 	{
 		Tree node = new Tree(-1);
 		return null; 
 	}
 	
-	private boolean allExamplesHaveSameClassification(List<String[]> examples)
+	private boolean allExamplesHaveSameClassification(List<Example> examples)
 	{
 		return false;
 	}
 	
-	private int findAttributeWithHighestImportance(List<String[]> examples)
+	private int findAttributeWithHighestImportance(List<Example> examples)
 	{
 		return -1;
 	}

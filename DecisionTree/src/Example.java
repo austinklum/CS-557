@@ -11,4 +11,17 @@ public class Example
 		this.isPosion = isPosion;
 	}
 	
+	public List<Attribute> getAttributes()
+	{
+		return attributes;
+	}
+	public Attribute getAttributeAt(int index)
+	{
+		return attributes.get(index);
+	}
+	public boolean isPosion()
+	{
+		return isPosion;
+	}
+	
 }
