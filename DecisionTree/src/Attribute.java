@@ -1,19 +1,26 @@
+import java.util.List;
 
 public class Attribute {
-	private String value;
 	private int position;
+	private String name;
+	private List<String> possibleValues;
 	
-	public Attribute(int position, String value)
+	public Attribute(int position, String name, List<String> possibleValues)
 	{
+		this.name = name;
 		this.position = position;
-		this.value = value;
+		this.possibleValues = possibleValues;
 	}
-	public String getValue()
+	public List<String> getPossibleValues()
 	{
-		return value;
+		return possibleValues;
 	}
 	public int getPosition()
 	{
 		return position;
+	}
+	public String getName()
+	{
+		return name;
 	}
 }

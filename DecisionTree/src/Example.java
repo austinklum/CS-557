@@ -1,21 +1,22 @@
+import java.util.HashMap;
 import java.util.List;
 
 public class Example 
 {
-	private List<Attribute> attributes;
+	private HashMap<Integer,String> attributes;
 	private boolean isPosion;
 	
-	public Example(List<Attribute> attributes, boolean isPosion)
+	public Example(HashMap<Integer,String> attributes, boolean isPosion)
 	{
 		this.attributes = attributes;
 		this.isPosion = isPosion;
 	}
 	
-	public List<Attribute> getAttributes()
+	public HashMap<Integer,String> getAttributes()
 	{
 		return attributes;
 	}
-	public Attribute getAttributeAt(int index)
+	public String getAttributeAt(int index)
 	{
 		return attributes.get(index);
 	}

@@ -15,8 +15,7 @@ public class DecisionTree
 	private boolean shouldPrint = false;
 	
 	private List<Example> examples;
-	private HashMap<Integer, List<String>> features;
-	private HashMap<Integer, String> featureName;
+	private HashMap<Integer, Attribute> attributes;
 	private Tree root;
 	
 	public DecisionTree(int i, int l, int t, boolean shouldPrint)
@@ -75,20 +74,17 @@ public class DecisionTree
 	private void tryToInitAttributes() throws IOException
 	{
 		int pos = 0;
-		features = new HashMap<Integer, List<String>>();
+		attributes = new HashMap<Integer, Attribute>();
 		Scanner scan = new Scanner(new File("properties.txt"));
 		String line[];
 		while(scan.hasNext())
 		{
 			line = scan.nextLine().split(": ");
-			
 			String name = line[0];
-			featureName.put(pos, name);
-
 			List<String> possibleValues = Arrays.asList(line[1].split(" "));
-			features.put(pos, possibleValues);
 			
-			pos++;
+			Attribute attribute = new Attribute(pos, name, possibleValues);
+			attributes.put(pos++, attribute);
 		}
 		scan.close();
 	}
@@ -111,32 +107,26 @@ public class DecisionTree
 			int pos = 0;
 			line = scan.nextLine();
 			String[] lineSplit = line.split(" ");
-			List<Attribute> lineAttributes = new LinkedList<>();
+			HashMap<Integer, String> lineAttributes = new HashMap<>();
 			for(String featureValue : lineSplit)
 			{
-				Attribute attr = new Attribute(pos++, featureValue);
-				lineAttributes.add(attr);
+				lineAttributes.put(pos++, featureValue);
 			}
-			Example example = new Example(lineAttributes, Boolean.getBoolean(lineSplit[lineSplit.length-1]));
+			Example example = new Example(lineAttributes, "p".equalsIgnoreCase(lineSplit[lineSplit.length-1]));
 			examples.add(example);
 		}
 		scan.close();
-	}
-	
-	private boolean isPosion(String[] features)
-	{
-		return features[features.length - 1].equals("p");
 	}
 	
 	public void run()
 	{
 		for (int k = 0; k*i < l; k++)
 		{
-			
+			learnDecisionTree(examples, attributes, examples);
 		}
 	}
 	
-	private Tree learnDecisionTree(List<Example> examples, List<Attribute> attributes, List<Example>parentExamples)
+	private Tree learnDecisionTree(List<Example> examples, HashMap<Integer, Attribute> attributes, List<Example> parentExamples)
 	{
 		if (examples.isEmpty())
 		{
@@ -154,16 +144,17 @@ public class DecisionTree
 		{
 			int predictAttr = findAttributeWithHighestImportance(examples);
 			Tree tree = new Tree(predictAttr);
-			for(String possibleValue : features.get(predictAttr))
+			for(String possibleValue : attributes.get(predictAttr).getPossibleValues())
 			{
 				 List<Example> filteredExamples = examples
 						 .stream()
-						 .filter(ex -> ex.getAttributeAt(predictAttr).getValue().equals(possibleValue))
+						 .filter(ex -> ex.getAttributeAt(predictAttr).equals(possibleValue))
 						 .collect(Collectors.toList());
-				 List<Attribute> filteredAttributes = attributes
-						 .stream()
-						 .filter(attr -> attr.getPosition() != predictAttr)
-						 .collect(Collectors.toList());
+				 
+				 HashMap<Integer, Attribute> filteredAttributes = new HashMap<>();
+				 filteredAttributes.putAll(attributes);
+				 filteredAttributes.remove(predictAttr);
+				 
 				 Tree subTree = learnDecisionTree(filteredExamples, filteredAttributes, examples);
 				 tree.addChild(subTree);
 			}
