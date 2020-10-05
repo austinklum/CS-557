@@ -1,6 +1,8 @@
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -61,9 +63,29 @@ public class DecisionTree
 	
 	private void initAttributes()
 	{
-		features = new List<Attribute>();
-		features.get(0).get(0);
+		try {
+			tryToInitAttributes();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void tryToInitAttributes() throws IOException
+	{
+		int c = 0;
+		features = new LinkedList<Attribute>();
 		Scanner scan = new Scanner(new File("properties.txt"));
+		String line[];
+		while(scan.hasNext())
+		{
+			line = scan.nextLine().split(": ");
+			String name = line[0];
+			List<String> possibleValues = Arrays.asList(line[1].split(" "));
+			Attribute attr = new Attribute(name, possibleValues, "", c++);
+			features.add(attr);
+		}
+		
+		scan.close();
 	}
 	
 	public void processFile(File file)
