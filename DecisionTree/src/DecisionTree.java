@@ -1,7 +1,7 @@
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -14,7 +14,8 @@ public class DecisionTree
 	private boolean shouldPrint = false;
 	
 	private List<Example> examples;
-	private List<Attribute> features;
+	private HashMap<Integer, List<String>> features;
+	private HashMap<Integer, String> featureName;
 	private Tree root;
 	
 	public DecisionTree(int i, int l, int t, boolean shouldPrint)
@@ -72,19 +73,22 @@ public class DecisionTree
 	
 	private void tryToInitAttributes() throws IOException
 	{
-		int c = 0;
-		features = new LinkedList<Attribute>();
+		int pos = 0;
+		features = new HashMap<Integer, List<String>>();
 		Scanner scan = new Scanner(new File("properties.txt"));
 		String line[];
 		while(scan.hasNext())
 		{
 			line = scan.nextLine().split(": ");
+			
 			String name = line[0];
+			featureName.put(pos, name);
+
 			List<String> possibleValues = Arrays.asList(line[1].split(" "));
-			Attribute attr = new Attribute(name, possibleValues, "", c++);
-			features.add(attr);
+			features.put(pos, possibleValues);
+			
+			pos++;
 		}
-		
 		scan.close();
 	}
 	
@@ -100,10 +104,21 @@ public class DecisionTree
 	private void tryToProcessFile(File file) throws IOException
 	{
 		Scanner scan = new Scanner(file);
-		String line = scan.nextLine();
-		
-		examples.add(line.split(" "));
-		
+		String line; 
+		while (scan.hasNext())
+		{
+			int pos = 0;
+			line = scan.nextLine();
+			String[] lineSplit = line.split(" ");
+			List<Attribute> lineAttributes = new LinkedList<>();
+			for(String featureValue : lineSplit)
+			{
+				Attribute attr = new Attribute(pos++, featureValue);
+				lineAttributes.add(attr);
+			}
+			Example example = new Example(lineAttributes, Boolean.getBoolean(lineSplit[lineSplit.length-1]));
+			examples.add(example);
+		}
 		scan.close();
 	}
 	
