@@ -6,11 +6,17 @@ public class Tree {
 	private List<Tree> children;
 	private Attribute attribute;
 	private Tree parent;
+	private boolean isPosion;
 	
 	public Tree(Attribute attribute)
 	{
 		this.attribute = attribute;
 		children = new ArrayList<Tree>();
+	}
+	
+	public Tree(boolean isPosion)
+	{
+		this.isPosion = isPosion;
 	}
 	
     public Tree getParent() {

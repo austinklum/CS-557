@@ -134,7 +134,7 @@ public class DecisionTree
 		}
 		else if (allExamplesHaveSameClassification(examples))
 		{
-			return null;
+			return new Tree(examples.get(0).isPosion());
 		}
 		else if (attributes.isEmpty())
 		{
@@ -162,9 +162,9 @@ public class DecisionTree
 		}
 	}
 	
-	private Tree pluralityValue(List<Example> parentExamples)
+	private Tree pluralityValue(List<Example> examples)
 	{
-	
+		
 		return null; 
 	}
 	
