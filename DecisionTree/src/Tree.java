@@ -14,10 +14,17 @@ public class Tree {
 	
 	public Tree(List<Example> examples, Attribute attribute, int attributeIndexForValue)
 	{
-		this.examples = new LinkedList<Example>();
+		this.examples = examples;
 		this.attribute = attribute;
 		this.attributeIndexForValue = attributeIndexForValue;
 		children = new ArrayList<Tree>();
+	}
+	
+	public Tree(List<Example> examples)
+	{
+		this.examples = examples;
+		this.attributeIndexForValue = -1;
+		this.children = new ArrayList<Tree>();
 	}
 	
 	public Tree(boolean isPosion)
@@ -106,7 +113,7 @@ public class Tree {
 		return remainder;
 	}
 	
-	public double gain(Attribute attributeToSplitOn)
+	public double getGain(Attribute attributeToSplitOn)
 	{
 		double entropy = this.getEntropy();
 		double remainder = this.getRemainder(attributeToSplitOn);

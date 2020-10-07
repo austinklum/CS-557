@@ -142,18 +142,18 @@ public class DecisionTree
 		}
 		else
 		{
-			int predictAttr = findAttributeWithHighestImportance(examples);
-			Tree tree = new Tree(examples, attributes.get(predictAttr), predictAttr);
-			for(String possibleValue : attributes.get(predictAttr).getPossibleValues())
+			Attribute predictAttr = findAttributeWithHighestImportance(attributes, examples);
+			Tree tree = new Tree(examples, predictAttr, -1).splitOnAttribute(predictAttr);
+			for(String possibleValue : attributes.get(predictAttr.getPosition()).getPossibleValues())
 			{
 				 List<Example> filteredExamples = examples
 						 .stream()
-						 .filter(ex -> ex.getAttributeAt(predictAttr).equals(possibleValue))
+						 .filter(ex -> ex.getAttributeAt(predictAttr.getPosition()).equals(possibleValue))
 						 .collect(Collectors.toList());
 				 
 				 HashMap<Integer, Attribute> filteredAttributes = new HashMap<>();
 				 filteredAttributes.putAll(attributes);
-				 filteredAttributes.remove(predictAttr);
+				 filteredAttributes.remove(predictAttr.getPosition());
 				 
 				 Tree subTree = learnDecisionTree(filteredExamples, filteredAttributes, examples);
 				 tree.addChild(subTree);
@@ -186,9 +186,22 @@ public class DecisionTree
 		return getPosionClassificationCount(examples) == examples.size();
 	}
 
-	private int findAttributeWithHighestImportance(List<Example> examples)
+	private Attribute findAttributeWithHighestImportance(HashMap<Integer, Attribute> attributes, List<Example> examples)
 	{
+		double bestGain = 0;
+		int bestAttributeIndex = -1;
+		int index = 0;
+		Tree tree = new Tree(examples);
+		for (Attribute attributeToSplitOn : attributes.values())
+		{
+			double gain = tree.getGain(attributeToSplitOn);
+			if (gain > bestGain)
+			{
+				bestGain = gain;
+				bestAttributeIndex = index;
+			}
+		}
 		
-		return -1;
+		return attributes.get(bestAttributeIndex);
 	}
 }
