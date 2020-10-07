@@ -9,13 +9,14 @@ public class Tree {
 	private Attribute attribute;
 	private Tree parent;
 	private boolean isPosion;
-	private int attributeIndex;
+	private int attributeIndexForValue;
 	private List<Example> examples;
 	
-	public Tree(List<Example> examples, Attribute attribute, int attributeIndex)
+	public Tree(List<Example> examples, Attribute attribute, int attributeIndexForValue)
 	{
 		this.examples = new LinkedList<Example>();
 		this.attribute = attribute;
+		this.attributeIndexForValue = attributeIndexForValue;
 		children = new ArrayList<Tree>();
 	}
 	
@@ -52,19 +53,64 @@ public class Tree {
 		return attribute;
 	}
 	
-	public Tree splitOnAttribute()
+	public List<Example> getExamples()
 	{
-		Tree tree = new Tree(examples, attribute, attributeIndex);
+		return examples;
+	}
+	
+	public Tree splitOnAttribute(Attribute attributeToSplitOn)
+	{
+		int index = 0;
+		
+		Tree tree = new Tree(examples, attribute, attributeIndexForValue);
 		List<String> possibleValues = attribute.getPossibleValues();
-		for (String possibleValue : possibleValues)                                                                                                                                                                                                                                                                    
+		for (String possibleValue : possibleValues)                                                                                                                                                                                                                                                     
 		{
 			List<Example> filteredExamples = examples
 					.stream()
-					.filter(ex -> ex.getAttributeAt(attributeIndex).equals(possibleValue))
+					.filter(ex -> ex.getAttributeAt(attributeToSplitOn.getPosition()).equals(possibleValue))
 					.collect(Collectors.toList());
-			this.children.add(new Tree(filteredExamples, attribute, attributeIndex));
+			this.children.add(new Tree(filteredExamples, attributeToSplitOn, index++));
 		}
 		return tree;
 	}
 	
+	private double getEntropy()
+	{
+		long p = examples.stream().filter(ex -> ex.isPosion()).count();
+		long n = examples.stream().filter(ex -> !ex.isPosion()).count();
+		double ppn = p / (p+n);
+		double npn = n / (p+n);
+		
+		double entropy = - ppn * log2(ppn) - npn * log2(npn); 
+		
+		return entropy;
+	}
+	
+	public static double log2(double npn)
+	{
+		return (double) (Math.log(npn) / Math.log(2));
+	}
+	
+	private double getRemainder(Attribute attributeToSplitOn)
+	{
+		double remainder = 0;
+		Tree attributeSplitTree = splitOnAttribute(attributeToSplitOn);
+		for (Tree treeValue : attributeSplitTree.getChildren())
+		{
+			double childEntropy = treeValue.getEntropy();
+			double scalar = treeValue.getExamples().size() / this.getExamples().size();
+			double remainPart = scalar * childEntropy;
+			remainder += remainPart;
+		}
+		return remainder;
+	}
+	
+	public double gain(Attribute attributeToSplitOn)
+	{
+		double entropy = this.getEntropy();
+		double remainder = this.getRemainder(attributeToSplitOn);
+		double gain = entropy - remainder;
+		return gain;
+	}
 }

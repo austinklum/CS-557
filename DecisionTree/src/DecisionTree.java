@@ -185,24 +185,7 @@ public class DecisionTree
 	{
 		return getPosionClassificationCount(examples) == examples.size();
 	}
-	
-	private double getEntropy(Tree tree, List<Example> examples)
-	{
-		long p = getPosionClassificationCount(examples);
-		long n = examples.stream().filter(ex -> !ex.isPosion()).count();
-		double ppn = p / (p+n);
-		double npn = n / (p+n);
-		
-		double entropy = - ppn * log2(ppn) - npn * log2(npn); 
-		
-		return entropy;
-	}
-	
-	public static double log2(double npn)
-	{
-		return (double) (Math.log(npn) / Math.log(2));
-	}
-	
+
 	private int findAttributeWithHighestImportance(List<Example> examples)
 	{
 		
