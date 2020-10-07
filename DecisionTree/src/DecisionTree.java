@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -8,221 +9,217 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
-public class DecisionTree 
-{
+public class DecisionTree {
 	private int i = 10;
 	private int l = 100;
 	private int t = 20;
 	private boolean shouldPrint = false;
-	
+
 	private List<Example> examples;
 	private HashMap<Integer, Attribute> attributes;
 	private Tree root;
-	
-	public DecisionTree(int i, int l, int t, boolean shouldPrint)
-	{
+
+	public DecisionTree(int i, int l, int t, boolean shouldPrint) {
 		this.i = i;
 		this.l = l;
 		this.t = t;
 		this.shouldPrint = shouldPrint;
 		initAttributes();
-		
+
 	}
-	
-	public DecisionTree(String[] args)
-	{
+
+	public DecisionTree(String[] args) {
 		processArgs(args);
 		initAttributes();
 	}
 
-	private void processArgs(String[] args)
-	{
-		for (int j = 0; j < args.length; j++)
-		{
-			switch (args[j])
-			{
-				case "-i":
-					this.i = Integer.parseInt(args[j+1]);
-					break;
-				case "-l":
-					this.l = Integer.parseInt(args[j+1]);
-					break;
-				case "-t":
-					this.t = Integer.parseInt(args[j+1]);
-					break;
-				case "-p":
-					this.shouldPrint = true;
-					break;
-				default:
-					System.out.println(args[j] + " is not a supported command-line argument.");
-					System.out.println("Expected format is -i <VAL> -l <VAL> -t <VAL> -p");
-					System.exit(-1);
-					break;
+	private void processArgs(String[] args) {
+		for (int j = 0; j < args.length; j++) {
+			switch (args[j]) {
+			case "-i":
+				this.i = Integer.parseInt(args[j + 1]);
+				break;
+			case "-l":
+				this.l = Integer.parseInt(args[j + 1]);
+				break;
+			case "-t":
+				this.t = Integer.parseInt(args[j + 1]);
+				break;
+			case "-p":
+				this.shouldPrint = true;
+				break;
+			default:
+				System.out.println(args[j] + " is not a supported command-line argument.");
+				System.out.println("Expected format is -i <VAL> -l <VAL> -t <VAL> -p");
+				System.exit(-1);
+				break;
 			}
 		}
-		
+
 	}
-	
-	private void initAttributes()
-	{
+
+	private void initAttributes() {
 		try {
 			tryToInitAttributes();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
-	private void tryToInitAttributes() throws IOException
-	{
+
+	private void tryToInitAttributes() throws IOException {
 		int pos = 0;
 		examples = new LinkedList<Example>();
 		attributes = new HashMap<Integer, Attribute>();
 		Scanner scan = new Scanner(new File("properties.txt"));
 		String line[];
-		while(scan.hasNext())
-		{
+		while (scan.hasNext()) {
 			line = scan.nextLine().split(": ");
 			String name = line[0];
 			List<String> possibleValues = Arrays.asList(line[1].split(" "));
-			
+
 			Attribute attribute = new Attribute(pos, name, possibleValues);
 			attributes.put(pos++, attribute);
 		}
 		scan.close();
 	}
-	
-	public void processFile(File file)
-	{
+
+	public void processFile(File file) {
 		try {
 			tryToProcessFile(file);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
-	private void tryToProcessFile(File file) throws IOException
-	{
+
+	private void tryToProcessFile(File file) throws IOException {
 		Scanner scan = new Scanner(file);
-		String line; 
-		while (scan.hasNext())
-		{
+		String line;
+		while (scan.hasNext()) {
 			int pos = 0;
 			line = scan.nextLine();
 			String[] lineSplit = line.split(" ");
 			HashMap<Integer, String> lineAttributes = new HashMap<>();
-			for(String featureValue : lineSplit)
-			{
+			for (String featureValue : lineSplit) {
 				lineAttributes.put(pos++, featureValue);
 			}
-			Example example = new Example(lineAttributes, "p".equalsIgnoreCase(lineSplit[lineSplit.length-1]));
+			Example example = new Example(lineAttributes, "p".equalsIgnoreCase(lineSplit[lineSplit.length - 1]));
 			examples.add(example);
 		}
 		scan.close();
 	}
-	
-	public void run()
-	{
-		//for (int k = 0; k*i < l; k++)
-		//{
-			
-		Tree tree =	learnDecisionTree(examples, attributes, examples);
+
+	public void run() {
+		// for (int k = 0; k*i < l; k++)
+		// {
+
+		Tree tree = learnDecisionTree(examples, attributes, examples);
 		printTree(tree);
-		//}
+		// }
+	}
+
+	public static void printTree(Tree tree)
+	{
+		printTree(tree, 0);
+	}
+
+	private static void printTree(Tree tree, int tabbingCount)
+	{
+		 if (tree.isLeaf())
+		 {
+			 print(tabbingCount, "Leaf: Predict " + getPredictText(tree));
+		 }
+		 
+		 if (tree.getNumberOfChildren() > 0)
+		 {
+			 print(tabbingCount, "Node: Split on feature " + tree.getAttribute().getPosition() + " (" + tree.getAttribute().getName() + ")");
+			 for(Tree child : tree.getChildren())
+			 {
+				 print(tabbingCount + 1, "Branch = " + child.getAttribute().getPossibleValues().get(child.getAttributeIndexForValue()));
+				 printTree(child, tabbingCount + 1);
+			 }
+		 }
+		 
+		  
 	}
 	
-	  public static void printTree(Tree tree) {
-		    // base case
-		    if (tree == null) {
-		      return;
-		    }
-
-		    if (tree.isLeaf()) {
-		      System.out.print(tree.isPosion() ? "Posion " : "Edible ");
-		    }
-		    
-		    for(Tree child : tree.getChildren()) {
-		    	printTree(child);
-		    }
-		    System.out.println("");
-		  }
-	
-	private Tree learnDecisionTree(List<Example> examples, HashMap<Integer, Attribute> attributes, List<Example> parentExamples)
+	private static void print(int tabbingCount, String msg)
 	{
-		if (examples.isEmpty())
-		{
+		for(int i = 0; i < tabbingCount; i++)
+		 {
+			 System.out.print("\t");
+		 }
+		System.out.println(msg);
+	}
+	private static String getPredictText(Tree tree) {
+		String str = "Poison";
+		if (!tree.isPoison()) {
+			str = "Edible";
+		}
+		return str;
+	}
+
+	private Tree learnDecisionTree(List<Example> examples, HashMap<Integer, Attribute> attributes,
+			List<Example> parentExamples) {
+		if (examples.isEmpty()) {
 			return pluralityValue(parentExamples);
-		}
-		else if (allExamplesHaveSameClassification(examples))
-		{
-			return new Tree(examples.get(0).isPosion());
-		}
-		else if (attributes.isEmpty())
-		{
+		} else if (allExamplesHaveSameClassification(examples)) {
+			return new Tree(examples.get(0).isPoison());
+		} else if (attributes.isEmpty()) {
 			return pluralityValue(examples);
-		}
-		else
-		{
+		} else {
 			Attribute predictAttr = findAttributeWithHighestImportance(attributes, examples);
 			Tree tree = new Tree(examples, predictAttr, -1).splitOnAttribute(predictAttr);
-			for(String possibleValue : attributes.get(predictAttr.getPosition()).getPossibleValues())
-			{
-				 List<Example> filteredExamples = examples
-						 .stream()
-						 .filter(ex -> ex.getAttributeAt(predictAttr.getPosition()).equals(possibleValue))
-						 .collect(Collectors.toList());
-				 
-				 HashMap<Integer, Attribute> filteredAttributes = new HashMap<>();
-				 filteredAttributes.putAll(attributes);
-				 filteredAttributes.remove(predictAttr.getPosition());
-				 
-				 Tree subTree = learnDecisionTree(filteredExamples, filteredAttributes, examples);
-				 tree.addChild(subTree);
+			for (String possibleValue : attributes.get(predictAttr.getPosition()).getPossibleValues()) {
+				List<Example> filteredExamples = examples.stream()
+						.filter(ex -> ex.getAttributeAt(predictAttr.getPosition()).equals(possibleValue))
+						.collect(Collectors.toList());
+
+				HashMap<Integer, Attribute> filteredAttributes = new HashMap<>();
+				filteredAttributes.putAll(attributes);
+				filteredAttributes.remove(predictAttr.getPosition());
+
+				Tree subTree = learnDecisionTree(filteredExamples, filteredAttributes, examples);
+				tree.addChild(subTree);
 			}
 			return tree;
 		}
 	}
-	
-	private Tree pluralityValue(List<Example> examples)
-	{
-		long poisonCount = examples.stream().filter(ex -> ex.isPosion()).count();
+
+	private Tree pluralityValue(List<Example> examples) {
+		long poisonCount = examples.stream().filter(ex -> ex.isPoison()).count();
 		long difference = examples.size() - poisonCount; // negative means poison count is larger
-		
-		if (difference != 0)
-		{
+
+		if (difference != 0) {
 			return new Tree(difference < 0);
 		}
-		
+
 		Random rand = new Random();
-		return new Tree(rand.nextBoolean()); 
-	}
-	
-	private long getPosionClassificationCount(List<Example> examples)
-	{
-		return examples.stream().filter(Example::isPosion).count();
-	}
-	
-	private boolean allExamplesHaveSameClassification(List<Example> examples)
-	{
-		return getPosionClassificationCount(examples) == examples.size();
+		return new Tree(rand.nextBoolean());
 	}
 
-	private Attribute findAttributeWithHighestImportance(HashMap<Integer, Attribute> attributes, List<Example> examples)
-	{
+	private long getPoisonClassificationCount(List<Example> examples) {
+		return examples.stream().filter(Example::isPoison).count();
+	}
+
+	private boolean allExamplesHaveSameClassification(List<Example> examples) {
+		return getPoisonClassificationCount(examples) == examples.size();
+	}
+
+	private Attribute findAttributeWithHighestImportance(HashMap<Integer, Attribute> attributes,
+			List<Example> examples) {
 		double bestGain = 0;
 		int bestAttributeIndex = attributes.get(attributes.keySet().iterator().next()).getPosition();
 		int index = 0;
 		Tree tree = new Tree(examples);
-		for (Attribute attributeToSplitOn : attributes.values())
-		{
+		for (Attribute attributeToSplitOn : attributes.values()) {
 			double gain = tree.getGain(attributeToSplitOn);
-			if (gain > bestGain)
-			{
+			if (gain > bestGain) {
 				bestGain = gain;
 				bestAttributeIndex = index;
 			}
 			index++;
 		}
-		
+
 		return attributes.get(bestAttributeIndex);
 	}
 }

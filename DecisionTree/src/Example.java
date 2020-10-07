@@ -4,12 +4,12 @@ import java.util.List;
 public class Example 
 {
 	private HashMap<Integer,String> attributes;
-	private boolean isPosion;
+	private boolean isPoison;
 	
-	public Example(HashMap<Integer,String> attributes, boolean isPosion)
+	public Example(HashMap<Integer,String> attributes, boolean isPoison)
 	{
 		this.attributes = attributes;
-		this.isPosion = isPosion;
+		this.isPoison = isPoison;
 	}
 	
 	public HashMap<Integer,String> getAttributes()
@@ -20,9 +20,9 @@ public class Example
 	{
 		return attributes.get(index);
 	}
-	public boolean isPosion()
+	public boolean isPoison()
 	{
-		return isPosion;
+		return isPoison;
 	}
 	
 }
