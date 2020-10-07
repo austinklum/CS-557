@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
@@ -74,6 +75,7 @@ public class DecisionTree
 	private void tryToInitAttributes() throws IOException
 	{
 		int pos = 0;
+		examples = new LinkedList<Example>();
 		attributes = new HashMap<Integer, Attribute>();
 		Scanner scan = new Scanner(new File("properties.txt"));
 		String line[];
@@ -120,11 +122,29 @@ public class DecisionTree
 	
 	public void run()
 	{
-		for (int k = 0; k*i < l; k++)
-		{
-			learnDecisionTree(examples, attributes, examples);
-		}
+		//for (int k = 0; k*i < l; k++)
+		//{
+			
+		Tree tree =	learnDecisionTree(examples, attributes, examples);
+		printTree(tree);
+		//}
 	}
+	
+	  public static void printTree(Tree tree) {
+		    // base case
+		    if (tree == null) {
+		      return;
+		    }
+
+		    if (tree.isLeaf()) {
+		      System.out.print(tree.isPosion() ? "Posion " : "Edible ");
+		    }
+		    
+		    for(Tree child : tree.getChildren()) {
+		    	printTree(child);
+		    }
+		    System.out.println("");
+		  }
 	
 	private Tree learnDecisionTree(List<Example> examples, HashMap<Integer, Attribute> attributes, List<Example> parentExamples)
 	{
@@ -189,7 +209,7 @@ public class DecisionTree
 	private Attribute findAttributeWithHighestImportance(HashMap<Integer, Attribute> attributes, List<Example> examples)
 	{
 		double bestGain = 0;
-		int bestAttributeIndex = -1;
+		int bestAttributeIndex = attributes.get(attributes.keySet().iterator().next()).getPosition();
 		int index = 0;
 		Tree tree = new Tree(examples);
 		for (Attribute attributeToSplitOn : attributes.values())
@@ -200,6 +220,7 @@ public class DecisionTree
 				bestGain = gain;
 				bestAttributeIndex = index;
 			}
+			index++;
 		}
 		
 		return attributes.get(bestAttributeIndex);

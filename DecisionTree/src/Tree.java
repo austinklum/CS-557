@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 public class Tree {
@@ -18,6 +19,7 @@ public class Tree {
 		this.attribute = attribute;
 		this.attributeIndexForValue = attributeIndexForValue;
 		children = new ArrayList<Tree>();
+		this.isPosion = getMajority(examples);
 	}
 	
 	public Tree(List<Example> examples)
@@ -25,11 +27,18 @@ public class Tree {
 		this.examples = examples;
 		this.attributeIndexForValue = -1;
 		this.children = new ArrayList<Tree>();
+		this.isPosion = getMajority(examples);
 	}
 	
 	public Tree(boolean isPosion)
 	{
 		this.isPosion = isPosion;
+		this.children = new ArrayList<Tree>();
+	}
+	
+	public boolean isPosion()
+	{
+		return isPosion;
 	}
 	
     public Tree getParent() {
@@ -65,19 +74,36 @@ public class Tree {
 		return examples;
 	}
 	
+	private boolean getMajority(List<Example> example)
+	{
+		long poisonCount = examples.stream().filter(ex -> ex.isPosion()).count();
+		long difference = examples.size() - poisonCount; // negative means poison count is larger
+		
+		if (difference != 0)
+		{
+			return difference < 0;
+		}
+		
+		Random rand = new Random();
+		return rand.nextBoolean(); 
+	}
+	
 	public Tree splitOnAttribute(Attribute attributeToSplitOn)
 	{
 		int index = 0;
 		
 		Tree tree = new Tree(examples, attribute, attributeIndexForValue);
-		List<String> possibleValues = attribute.getPossibleValues();
+		List<String> possibleValues = attributeToSplitOn.getPossibleValues();
 		for (String possibleValue : possibleValues)                                                                                                                                                                                                                                                     
 		{
 			List<Example> filteredExamples = examples
 					.stream()
 					.filter(ex -> ex.getAttributeAt(attributeToSplitOn.getPosition()).equals(possibleValue))
 					.collect(Collectors.toList());
-			this.children.add(new Tree(filteredExamples, attributeToSplitOn, index++));
+			if (filteredExamples.size() > 0) 
+			{
+				tree.addChild((new Tree(filteredExamples, attributeToSplitOn, index++)));
+			}
 		}
 		return tree;
 	}
@@ -86,10 +112,10 @@ public class Tree {
 	{
 		long p = examples.stream().filter(ex -> ex.isPosion()).count();
 		long n = examples.stream().filter(ex -> !ex.isPosion()).count();
-		double ppn = p / (p+n);
-		double npn = n / (p+n);
+		double ppn = (double) p / (p+n);
+		double npn =  (double) n /(p+n);
 		
-		double entropy = - ppn * log2(ppn) - npn * log2(npn); 
+		double entropy = - ppn * (ppn != 0 ? log2(ppn) : 0) - npn * (npn != 0 ? log2(npn) : 0) ; 
 		
 		return entropy;
 	}
@@ -106,7 +132,7 @@ public class Tree {
 		for (Tree treeValue : attributeSplitTree.getChildren())
 		{
 			double childEntropy = treeValue.getEntropy();
-			double scalar = treeValue.getExamples().size() / this.getExamples().size();
+			double scalar = (double) treeValue.getExamples().size() / this.getExamples().size();
 			double remainPart = scalar * childEntropy;
 			remainder += remainPart;
 		}
