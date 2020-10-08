@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -109,17 +110,22 @@ public class DecisionTree {
 	}
 
 	public void run() {
-		// for (int k = 0; k*i < l; k++)
-		// {
-
-		root = learnDecisionTree(examples, attributes, examples);
-		test(examples);
-		// }
+		List<Example> shuffleSet = examples.subList(0, examples.size());
+		 for (int k = 0; k*i < l; k++)
+		 {
+			 for (int j = 0; j < t; j++) 
+			 {
+				Collections.shuffle(shuffleSet);
+				List<Example> training = shuffleSet.subList(0, k*i);
+				List<Example> test = shuffleSet.subList(k*i, shuffleSet.size());
+				Tree tree = learnDecisionTree(training, attributes, training);
+				test(tree, test);
+			 }
+		 }
 	}
 
-	private void test(List<Example> examples)
+	private void test(Tree tree, List<Example> examples)
 	{
-		Tree tree = root;
 		int correct = 0;
 		int wrong = 0;
 		for(Example ex : examples)
