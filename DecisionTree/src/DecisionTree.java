@@ -4,7 +4,6 @@
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,7 +11,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 
 public class DecisionTree {
 	private int i = 10;
@@ -22,7 +20,6 @@ public class DecisionTree {
 
 	private List<Example> examples;
 	private HashMap<Integer, Attribute> attributes;
-	private Tree root;
 
 	public DecisionTree(int i, int l, int t, boolean shouldPrint) {
 		this.i = i;
@@ -128,7 +125,6 @@ public class DecisionTree {
 			 double testAcc = 0;
 			 for (int j = 0; j < t; j++) 
 			 {
-				 //System.out.println("Trial " + j);
 				Collections.shuffle(shuffleSet);
 				List<Example> training = shuffleSet.subList(0, k*i);
 				List<Example> test = shuffleSet.subList(k*i, shuffleSet.size());
@@ -153,10 +149,11 @@ public class DecisionTree {
 
 		for(Example ex : examples)
 		{
-			if (predict(ex, tree) == ex.isPoison())
+			boolean predict = predict(ex,tree);
+			if (predict == ex.isPoison())
 			{
 				correct++;
-			}
+			} 
 		}
 		return (double) correct / examples.size();
 	}
@@ -215,9 +212,6 @@ public class DecisionTree {
 			return getPredictText(tree);
 		}
 		
-		if(attributeIndexForValue >= tree.getAttribute().getPossibleValues().size()) {
-			attributeIndexForValue = tree.getAttribute().getPossibleValues().size() - 1;
-		}
 		return tree.getAttribute().getPossibleValues().get(attributeIndexForValue);
 	}
 	
@@ -248,38 +242,25 @@ public class DecisionTree {
 			Attribute predictAttr = findAttributeWithHighestImportance(attributes, examples);
 			Tree tree = new Tree(examples, predictAttr, -1).splitOnAttribute(predictAttr);
 			int index = 0;
+		
+			HashMap<Integer, Attribute> filteredAttributes = new HashMap<>();
+			filteredAttributes.putAll(attributes);
+			filteredAttributes.remove(predictAttr.getPosition());
 			
-//			for (String possibleValue : attributes.get(predictAttr.getPosition()).getPossibleValues()) {
-//				List<Example> filteredExamples = examples.stream()
-//						.filter(ex -> ex.getAttributeAt(predictAttr.getPosition()).equals(possibleValue))
-//						.collect(Collectors.toList());
+			for (Tree child : tree.getChildren()) 
+			{
+				Tree subTree = learnDecisionTree(child.getExamples(), filteredAttributes, examples);
 
-				HashMap<Integer, Attribute> filteredAttributes = new HashMap<>();
-				filteredAttributes.putAll(attributes);
-				filteredAttributes.remove(predictAttr.getPosition());
-//
-//				if (filteredExamples.size() > 0)
-//				{
-				for (Tree child : tree.getChildren()) 
+				if (subTree.getNumberOfChildren() > 0)
 				{
-					Tree subTree = learnDecisionTree(child.getExamples(), filteredAttributes, examples);
-
-					if (subTree.getNumberOfChildren() > 0)
-					{
-						child.addChild(subTree);
-						subTree.setAttributeIndexforValue(index++);
-					}
-					else
-					{
-						child.setPoison(subTree.isPoison());
-					}
-//					tree.addChild(subTree);
-//					tree.getChildren().size();
-//				}
+					child.addChild(subTree);
+					subTree.setAttributeIndexforValue(index++);
 				}
-				//System.out.println(tree.getAttributeIndexForValue());
-				
-			//System.out.println("Split on " + index + " : " + predictAttr.getName());
+				else
+				{
+					child.setPoison(subTree.isPoison());
+				}
+			}
 			return tree;
 		}
 	}
