@@ -28,4 +28,13 @@ public class Example
 		return isPoison;
 	}
 	
+	public String toString()
+	{
+		String str = "";
+		for (String attr : attributes.values()) 
+		{
+			str += " " + attr;
+		}
+		return str  + (isPoison ? " p" : " e") + "\n";
+	}
 }

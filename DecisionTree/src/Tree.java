@@ -2,31 +2,35 @@
  * @author Austin Klum
  */
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
 public class Tree {
 
-	private List<Tree> children;
+	private ArrayList<Tree> children;
 	private Attribute attribute;
 	private Tree parent;
 	private boolean isPoison;
 	private int attributeIndexForValue;
 	private List<Example> examples;
+	private HashMap<Integer, Tree> childByAttributeIndex;
 
 	public Tree(List<Example> examples, Attribute attribute, int attributeIndexForValue) {
 		this.examples = examples;
 		this.attribute = attribute;
 		this.attributeIndexForValue = attributeIndexForValue;
+		childByAttributeIndex = new HashMap<>();
 		children = new ArrayList<Tree>();
 		this.isPoison = getMajority(examples);
 	}
 
-	public Tree(List<Example> examples) {
+	public Tree(List<Example> examples, Attribute attributeToSplitOn) {
 		this.examples = examples;
+		this.attribute = attributeToSplitOn;
 		this.attributeIndexForValue = -1;
+		childByAttributeIndex = new HashMap<>();
 		this.children = new ArrayList<Tree>();
 		this.isPoison = getMajority(examples);
 	}
@@ -44,7 +48,7 @@ public class Tree {
 		return this.parent;
 	}
 
-	public List<Tree> getChildren() {
+	public ArrayList<Tree> getChildren() {
 		return this.children;
 	}
 
@@ -79,9 +83,15 @@ public class Tree {
 		this.attributeIndexForValue = attributeIndexForValue;
 	}
 	
+	public HashMap<Integer, Tree> getChildByAttributeIndex()
+	{
+		return this.childByAttributeIndex;
+	}
+	
 	private boolean getMajority(List<Example> example) {
 		long poisonCount = examples.stream().filter(ex -> ex.isPoison()).count();
-		long difference = examples.size() - poisonCount; // negative means poison count is larger
+		long edibleCount = examples.stream().filter(ex -> !ex.isPoison()).count();
+		long difference = poisonCount - edibleCount; // negative means poison count is larger
 
 		if (difference != 0) {
 			return difference < 0;
@@ -105,7 +115,9 @@ public class Tree {
 					.collect(Collectors.toList());
 			if(filteredExamples.size() > 0) 
 			{
-				tree.addChild((new Tree(filteredExamples, attributeToSplitOn, index)));
+				Tree child = (new Tree(filteredExamples, attributeToSplitOn, index));
+				tree.addChild(child);
+				tree.childByAttributeIndex.put(index, child);
 			}
 			index++;
 		}

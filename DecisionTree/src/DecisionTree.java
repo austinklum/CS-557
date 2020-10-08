@@ -131,6 +131,7 @@ public class DecisionTree {
 				Collections.shuffle(shuffleSet);
 				List<Example> training = shuffleSet.subList(0, k*i);
 				List<Example> test = shuffleSet.subList(k*i, shuffleSet.size());
+				System.out.println("Training\n" + training);
 				tree = learnDecisionTree(training, attributes, training);
 				trainAcc += testAccuracy(tree, training);
 				testAcc += testAccuracy(tree, test);
@@ -147,20 +148,16 @@ public class DecisionTree {
 
 	private double testAccuracy(Tree tree, List<Example> examples)
 	{
-		int correct = 1;
-		int wrong = 0;
+		int correct = 0;
+
 		for(Example ex : examples)
 		{
 			if (predict(ex, tree) == ex.isPoison())
 			{
 				correct++;
 			}
-			else
-			{
-				wrong++; 
-			}
 		}
-		return (double) wrong / correct;
+		return (double) correct / examples.size();
 	}
 	
 	private boolean predict(Example ex, Tree tree)
@@ -170,14 +167,11 @@ public class DecisionTree {
 			return tree.isPoison();
 		}
 		
-		ex.getAttributeAt(tree.getAttribute().getPosition());
+		String value = ex.getAttributeAt(tree.getAttribute().getPosition());
 		for (Tree child : tree.getChildren())
 		{
-			if (child.getParent() == tree)
-			{
-				predict(ex, child);
-				break;
-			}
+			//if (value == child.getAttribute().getPossibleValues().get(tree.))
+				return predict(ex, child);
 		}
 		
 		return false;
@@ -200,12 +194,13 @@ public class DecisionTree {
 			 print(tabbingCount, "Node: Split on feature " + (tree.getAttribute().getPosition() + 1) + " (" + tree.getAttribute().getName() + ")");
 			 for(Tree child : tree.getChildren())
 			 {
-				 print(tabbingCount + 1, "Branch = " + getBranch(child));
-				 printTree(child, tabbingCount + 2);
+				 if (child.getAttribute() != null) 
+				 {
+					 print(tabbingCount + 1, "Branch = " + getBranch(child));
+					 printTree(child, tabbingCount + 2);
+				 }
 			 }
 		 }
-		 
-		  
 	}
 	
 	private static String getBranch(Tree tree)
@@ -238,8 +233,7 @@ public class DecisionTree {
 		return str;
 	}
 
-	private Tree learnDecisionTree(List<Example> examples, HashMap<Integer, Attribute> attributes,
-			List<Example> parentExamples) {
+	private Tree learnDecisionTree(List<Example> examples, HashMap<Integer, Attribute> attributes, List<Example> parentExamples) {
 		if (examples.isEmpty()) {
 			return pluralityValue(parentExamples);
 		} else if (allExamplesHaveSameClassification(examples)) {
@@ -273,7 +267,8 @@ public class DecisionTree {
 
 	private Tree pluralityValue(List<Example> examples) {
 		long poisonCount = examples.stream().filter(ex -> ex.isPoison()).count();
-		long difference = examples.size() - poisonCount; // negative means poison count is larger
+		long edibleCount = examples.stream().filter(ex -> !ex.isPoison()).count();
+		long difference = poisonCount - edibleCount; // negative means poison count is larger
 
 		if (difference != 0) {
 			return new Tree(difference < 0);
@@ -288,7 +283,9 @@ public class DecisionTree {
 	}
 
 	private boolean allExamplesHaveSameClassification(List<Example> examples) {
-		return getPoisonClassificationCount(examples) == examples.size();
+		return getPoisonClassificationCount(examples) == 0 || examples.stream()
+																 .filter(ex -> !ex.isPoison())
+																 .count() == 0;
 	}
 
 	private Attribute findAttributeWithHighestImportance(HashMap<Integer, Attribute> attributes,
@@ -296,8 +293,9 @@ public class DecisionTree {
 		double bestGain = 0;
 		int bestAttributeIndex = attributes.get(attributes.keySet().iterator().next()).getPosition();
 		int index = 0;
-		Tree tree = new Tree(examples);
+		
 		for (Attribute attributeToSplitOn : attributes.values()) {
+			Tree tree = new Tree(examples, attributeToSplitOn);
 			double gain = tree.getGain(attributeToSplitOn);
 			if (gain > bestGain) {
 				bestGain = gain;

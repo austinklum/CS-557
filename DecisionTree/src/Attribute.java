@@ -2,6 +2,7 @@
  * @author Austin Klum
  */
 import java.util.List;
+import java.util.jar.Attributes;
 
 public class Attribute {
 	private int position;
@@ -26,4 +27,10 @@ public class Attribute {
 	{
 		return name;
 	}
+	
+	public String toString()
+	{
+		return name + ": " + possibleValues.toString();
+	}
+	
 }
