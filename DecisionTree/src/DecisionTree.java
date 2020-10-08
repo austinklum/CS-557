@@ -128,10 +128,11 @@ public class DecisionTree {
 			 double testAcc = 0;
 			 for (int j = 0; j < t; j++) 
 			 {
+				 //System.out.println("Trial " + j);
 				Collections.shuffle(shuffleSet);
 				List<Example> training = shuffleSet.subList(0, k*i);
 				List<Example> test = shuffleSet.subList(k*i, shuffleSet.size());
-				System.out.println("Training\n" + training);
+
 				tree = learnDecisionTree(training, attributes, training);
 				trainAcc += testAccuracy(tree, training);
 				testAcc += testAccuracy(tree, test);
@@ -309,19 +310,21 @@ public class DecisionTree {
 	private Attribute findAttributeWithHighestImportance(HashMap<Integer, Attribute> attributes,
 			List<Example> examples) {
 		double bestGain = 0;
-		int bestAttributeIndex = attributes.get(attributes.keySet().iterator().next()).getPosition();
-		int index = 0;
+		Attribute bestAttribute = attributes.get(attributes.keySet().iterator().next());
 		
 		for (Attribute attributeToSplitOn : attributes.values()) {
 			Tree tree = new Tree(examples, attributeToSplitOn);
 			double gain = tree.getGain(attributeToSplitOn);
 			if (gain > bestGain) {
 				bestGain = gain;
-				bestAttributeIndex = index;
+				bestAttribute = attributeToSplitOn;
 			}
-			index++;
 		}
-
-		return attributes.get(bestAttributeIndex);
+		if (bestAttribute == null) 
+		{
+			System.out.println("Null attributes");
+			System.out.println("A little change");
+		}
+		return bestAttribute;
 	}
 }
