@@ -1,3 +1,6 @@
+/***
+ * @author Austin Klum
+ */
 import java.util.List;
 
 public class Attribute {

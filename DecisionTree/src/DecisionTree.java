@@ -1,3 +1,7 @@
+/***
+ * @author Austin Klum
+ */
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,18 +37,22 @@ public class DecisionTree {
 		processArgs(args);
 		initAttributes();
 	}
+	
+	public DecisionTree() {
+		initAttributes();
+	}
 
 	private void processArgs(String[] args) {
 		for (int j = 0; j < args.length; j++) {
 			switch (args[j]) {
 			case "-i":
-				this.i = Integer.parseInt(args[j + 1]);
+				this.i = Integer.parseInt(args[++j]);
 				break;
 			case "-l":
-				this.l = Integer.parseInt(args[j + 1]);
+				this.l = Integer.parseInt(args[++j]);
 				break;
 			case "-t":
-				this.t = Integer.parseInt(args[j + 1]);
+				this.t = Integer.parseInt(args[++j]);
 				break;
 			case "-p":
 				this.shouldPrint = true;
@@ -111,22 +119,30 @@ public class DecisionTree {
 
 	public void run() {
 		List<Example> shuffleSet = examples.subList(0, examples.size());
-		 for (int k = 0; k*i < l; k++)
+		System.out.println("(Results averaged across " + t + " trials)");
+		System.out.println("TrainSize\tTrainAcc\tTestAcc");
+		 for (int k = 1; k*i <= l; k++)
 		 {
+			 double trainAcc = 0;
+			 double testAcc = 0;
 			 for (int j = 0; j < t; j++) 
 			 {
 				Collections.shuffle(shuffleSet);
 				List<Example> training = shuffleSet.subList(0, k*i);
 				List<Example> test = shuffleSet.subList(k*i, shuffleSet.size());
 				Tree tree = learnDecisionTree(training, attributes, training);
-				test(tree, test);
+				trainAcc += testAccuracy(tree, training);
+				testAcc += testAccuracy(tree, test);
 			 }
+			 trainAcc /= t;
+			 testAcc /= t;
+			 System.out.printf("%4s     \t%1.6f\t%1.6f\n",k*i, trainAcc, testAcc);
 		 }
 	}
 
-	private void test(Tree tree, List<Example> examples)
+	private double testAccuracy(Tree tree, List<Example> examples)
 	{
-		int correct = 0;
+		int correct = 1;
 		int wrong = 0;
 		for(Example ex : examples)
 		{
@@ -139,7 +155,7 @@ public class DecisionTree {
 				wrong++; 
 			}
 		}
-		System.out.println("Train Accuracy : " + (double) wrong / correct);
+		return (double) wrong / correct;
 	}
 	
 	private boolean predict(Example ex, Tree tree)
