@@ -121,6 +121,7 @@ public class DecisionTree {
 		List<Example> shuffleSet = examples.subList(0, examples.size());
 		System.out.println("(Results averaged across " + t + " trials)");
 		System.out.println("TrainSize\tTrainAcc\tTestAcc");
+		Tree tree = null;
 		 for (int k = 1; k*i <= l; k++)
 		 {
 			 double trainAcc = 0;
@@ -130,13 +131,17 @@ public class DecisionTree {
 				Collections.shuffle(shuffleSet);
 				List<Example> training = shuffleSet.subList(0, k*i);
 				List<Example> test = shuffleSet.subList(k*i, shuffleSet.size());
-				Tree tree = learnDecisionTree(training, attributes, training);
+				tree = learnDecisionTree(training, attributes, training);
 				trainAcc += testAccuracy(tree, training);
 				testAcc += testAccuracy(tree, test);
 			 }
 			 trainAcc /= t;
 			 testAcc /= t;
 			 System.out.printf("%4s     \t%1.6f\t%1.6f\n",k*i, trainAcc, testAcc);
+		 }
+		 if(shouldPrint)
+		 {
+			 printTree(tree);
 		 }
 	}
 
