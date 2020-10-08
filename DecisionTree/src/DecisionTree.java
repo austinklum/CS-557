@@ -112,11 +112,50 @@ public class DecisionTree {
 		// for (int k = 0; k*i < l; k++)
 		// {
 
-		Tree tree = learnDecisionTree(examples, attributes, examples);
-		printTree(tree);
+		root = learnDecisionTree(examples, attributes, examples);
+		test(examples);
 		// }
 	}
 
+	private void test(List<Example> examples)
+	{
+		Tree tree = root;
+		int correct = 0;
+		int wrong = 0;
+		for(Example ex : examples)
+		{
+			if (predict(ex, tree) == ex.isPoison())
+			{
+				correct++;
+			}
+			else
+			{
+				wrong++; 
+			}
+		}
+		System.out.println("Train Accuracy : " + (double) wrong / correct);
+	}
+	
+	private boolean predict(Example ex, Tree tree)
+	{
+		if (tree.isLeaf())
+		{
+			return tree.isPoison();
+		}
+		
+		ex.getAttributeAt(tree.getAttribute().getPosition());
+		for (Tree child : tree.getChildren())
+		{
+			if (child.getParent() == tree)
+			{
+				predict(ex, child);
+				break;
+			}
+		}
+		
+		return false;
+	}
+	
 	public static void printTree(Tree tree)
 	{
 		printTree(tree, 0);
