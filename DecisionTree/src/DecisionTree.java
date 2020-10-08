@@ -170,8 +170,11 @@ public class DecisionTree {
 		String value = ex.getAttributeAt(tree.getAttribute().getPosition());
 		for (Tree child : tree.getChildren())
 		{
-			//if (value == child.getAttribute().getPossibleValues().get(tree.))
+			if (child.getAttribute() != null && value.equals(child.getAttribute().getPossibleValues().get(child.getAttributeIndexForValue())))
+			{
 				return predict(ex, child);
+			}
+				
 		}
 		
 		return false;
@@ -245,21 +248,36 @@ public class DecisionTree {
 			Tree tree = new Tree(examples, predictAttr, -1).splitOnAttribute(predictAttr);
 			int index = 0;
 			
-			for (String possibleValue : attributes.get(predictAttr.getPosition()).getPossibleValues()) {
-				List<Example> filteredExamples = examples.stream()
-						.filter(ex -> ex.getAttributeAt(predictAttr.getPosition()).equals(possibleValue))
-						.collect(Collectors.toList());
+//			for (String possibleValue : attributes.get(predictAttr.getPosition()).getPossibleValues()) {
+//				List<Example> filteredExamples = examples.stream()
+//						.filter(ex -> ex.getAttributeAt(predictAttr.getPosition()).equals(possibleValue))
+//						.collect(Collectors.toList());
 
 				HashMap<Integer, Attribute> filteredAttributes = new HashMap<>();
 				filteredAttributes.putAll(attributes);
 				filteredAttributes.remove(predictAttr.getPosition());
+//
+//				if (filteredExamples.size() > 0)
+//				{
+				for (Tree child : tree.getChildren()) 
+				{
+					Tree subTree = learnDecisionTree(child.getExamples(), filteredAttributes, examples);
 
-				Tree subTree = learnDecisionTree(filteredExamples, filteredAttributes, examples);
-				subTree.setAttributeIndexforValue(index++);
-				tree.addChild(subTree);
-				
+					if (subTree.getNumberOfChildren() > 0)
+					{
+						child.addChild(subTree);
+						subTree.setAttributeIndexforValue(index++);
+					}
+					else
+					{
+						child.setPoison(subTree.isPoison());
+					}
+//					tree.addChild(subTree);
+//					tree.getChildren().size();
+//				}
+				}
 				//System.out.println(tree.getAttributeIndexForValue());
-			}
+				
 			//System.out.println("Split on " + index + " : " + predictAttr.getName());
 			return tree;
 		}

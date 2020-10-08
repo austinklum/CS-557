@@ -44,6 +44,11 @@ public class Tree {
 		return isPoison;
 	}
 
+	public void setPoison(boolean isPoison)
+	{
+		this.isPoison = isPoison;
+	}
+	
 	public Tree getParent() {
 		return this.parent;
 	}
