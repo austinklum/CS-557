@@ -71,6 +71,11 @@ public class Tree {
 		return attributeIndexForValue;
 	}
 
+	public void setAttributeIndexforValue(int attributeIndexForValue)
+	{
+		this.attributeIndexForValue = attributeIndexForValue;
+	}
+	
 	private boolean getMajority(List<Example> example) {
 		long poisonCount = examples.stream().filter(ex -> ex.isPoison()).count();
 		long difference = examples.size() - poisonCount; // negative means poison count is larger
@@ -83,23 +88,29 @@ public class Tree {
 		return rand.nextBoolean();
 	}
 
-	public Tree splitOnAttribute(Attribute attributeToSplitOn) {
+	public Tree splitOnAttribute(Attribute attributeToSplitOn)
+	{
 		int index = 0;
 
 		Tree tree = new Tree(examples, attribute, attributeIndexForValue);
 		List<String> possibleValues = attributeToSplitOn.getPossibleValues();
-		for (String possibleValue : possibleValues) {
-			List<Example> filteredExamples = examples.stream()
+		for (String possibleValue : possibleValues)
+		{
+			List<Example> filteredExamples = examples
+					.stream()
 					.filter(ex -> ex.getAttributeAt(attributeToSplitOn.getPosition()).equals(possibleValue))
 					.collect(Collectors.toList());
-			if (filteredExamples.size() > 0) {
-				tree.addChild((new Tree(filteredExamples, attributeToSplitOn, index++)));
+			if(filteredExamples.size() > 0) 
+			{
+				tree.addChild((new Tree(filteredExamples, attributeToSplitOn, index)));
 			}
+			index++;
 		}
 		return tree;
 	}
 
-	private double getEntropy() {
+	private double getEntropy() 
+	{
 		long p = examples.stream().filter(ex -> ex.isPoison()).count();
 		long n = examples.stream().filter(ex -> !ex.isPoison()).count();
 		double ppn = (double) p / (p + n);
@@ -110,14 +121,17 @@ public class Tree {
 		return entropy;
 	}
 
-	public static double log2(double npn) {
-		return (double) (Math.log(npn) / Math.log(2));
+	public static double log2(double num)
+	{
+		return (double) (Math.log(num) / Math.log(2));
 	}
 
-	private double getRemainder(Attribute attributeToSplitOn) {
+	private double getRemainder(Attribute attributeToSplitOn)
+	{
 		double remainder = 0;
 		Tree attributeSplitTree = splitOnAttribute(attributeToSplitOn);
-		for (Tree treeValue : attributeSplitTree.getChildren()) {
+		for (Tree treeValue : attributeSplitTree.getChildren()) 
+		{
 			double childEntropy = treeValue.getEntropy();
 			double scalar = (double) treeValue.getExamples().size() / this.getExamples().size();
 			double remainPart = scalar * childEntropy;
@@ -126,7 +140,8 @@ public class Tree {
 		return remainder;
 	}
 
-	public double getGain(Attribute attributeToSplitOn) {
+	public double getGain(Attribute attributeToSplitOn)
+	{
 		double entropy = this.getEntropy();
 		double remainder = this.getRemainder(attributeToSplitOn);
 		double gain = entropy - remainder;

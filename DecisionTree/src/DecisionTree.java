@@ -126,27 +126,41 @@ public class DecisionTree {
 	{
 		 if (tree.isLeaf())
 		 {
-			 print(tabbingCount, "Leaf: Predict " + getPredictText(tree));
+			 print(tabbingCount + 1, "Leaf: Predict " + getPredictText(tree));
 		 }
 		 
 		 if (tree.getNumberOfChildren() > 0)
 		 {
-			 print(tabbingCount, "Node: Split on feature " + tree.getAttribute().getPosition() + " (" + tree.getAttribute().getName() + ")");
+			 print(tabbingCount, "Node: Split on feature " + (tree.getAttribute().getPosition() + 1) + " (" + tree.getAttribute().getName() + ")");
 			 for(Tree child : tree.getChildren())
 			 {
-				 print(tabbingCount + 1, "Branch = " + child.getAttribute().getPossibleValues().get(child.getAttributeIndexForValue()));
-				 printTree(child, tabbingCount + 1);
+				 print(tabbingCount + 1, "Branch = " + getBranch(child));
+				 printTree(child, tabbingCount + 2);
 			 }
 		 }
 		 
 		  
 	}
 	
+	private static String getBranch(Tree tree)
+	{ 
+		int attributeIndexForValue = tree.getAttributeIndexForValue();
+		if(tree.getAttribute() == null)
+		{
+			return getPredictText(tree);
+		}
+		
+		if(attributeIndexForValue >= tree.getAttribute().getPossibleValues().size()) {
+			attributeIndexForValue = tree.getAttribute().getPossibleValues().size() - 1;
+		}
+		return tree.getAttribute().getPossibleValues().get(attributeIndexForValue);
+	}
+	
 	private static void print(int tabbingCount, String msg)
 	{
 		for(int i = 0; i < tabbingCount; i++)
 		 {
-			 System.out.print("\t");
+			 System.out.print("  ");
 		 }
 		System.out.println(msg);
 	}
@@ -169,6 +183,8 @@ public class DecisionTree {
 		} else {
 			Attribute predictAttr = findAttributeWithHighestImportance(attributes, examples);
 			Tree tree = new Tree(examples, predictAttr, -1).splitOnAttribute(predictAttr);
+			int index = 0;
+			
 			for (String possibleValue : attributes.get(predictAttr.getPosition()).getPossibleValues()) {
 				List<Example> filteredExamples = examples.stream()
 						.filter(ex -> ex.getAttributeAt(predictAttr.getPosition()).equals(possibleValue))
@@ -179,8 +195,12 @@ public class DecisionTree {
 				filteredAttributes.remove(predictAttr.getPosition());
 
 				Tree subTree = learnDecisionTree(filteredExamples, filteredAttributes, examples);
+				subTree.setAttributeIndexforValue(index++);
 				tree.addChild(subTree);
+				
+				//System.out.println(tree.getAttributeIndexForValue());
 			}
+			//System.out.println("Split on " + index + " : " + predictAttr.getName());
 			return tree;
 		}
 	}
