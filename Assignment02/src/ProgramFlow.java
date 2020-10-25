@@ -173,5 +173,31 @@ public class ProgramFlow {
 	private void miniBatchGradientDescent(List<Fold> dataNotInFold)
 	{
 		LinkedList<Integer> weights = new LinkedList<>();
+		int tIterations = 0;
+		int epochCount = 0;
+		double cost = 0;
+		double costChange = 0;
+		while(!stopConditionsMet(epochCount, cost, costChange))
+		{
+			
+		}
+	}
+	
+	private boolean stopConditionsMet(int epochCount, double cost, double costChange)
+	{
+		boolean stopConditionsMet = false;
+		if (epochCount == epochLimit)
+		{
+			stopConditionsMet = true;
+		}
+		else if (cost < Math.pow(10, -10))
+		{
+			stopConditionsMet = true;
+		}
+		else if (costChange < Math.pow(10, -10))
+		{
+			stopConditionsMet = true;
+		}
+		return stopConditionsMet;
 	}
 }
