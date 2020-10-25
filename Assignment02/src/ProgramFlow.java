@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class ProgramFlow {
@@ -26,7 +27,7 @@ public class ProgramFlow {
 		setDefaults();
 		processCommandLineArgs(args);
 		LinkedList<Fold> splitData = createDataSet();
-		
+		run(splitData);
 	}
 
 	private void setDefaults()
@@ -155,4 +156,22 @@ public class ProgramFlow {
 		return splitData;
 	}
 	
+	private void run(LinkedList<Fold> splitData)
+	{
+		for(int d = this.smallestPolynomialDegree; d <= this.largestPolynomialDegree; d++)
+		{
+			for(Fold fold : splitData)
+			{
+				List<Fold> dataNotInFold = splitData.stream()
+						.filter(aFold -> aFold.getFoldNumber() != fold.getFoldNumber())
+						.collect(Collectors.toList());
+				miniBatchGradientDescent(dataNotInFold);
+			}
+		}
+	}
+	
+	private void miniBatchGradientDescent(List<Fold> dataNotInFold)
+	{
+		LinkedList<Integer> weights = new LinkedList<>();
+	}
 }
