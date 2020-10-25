@@ -1,12 +1,11 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class ProgramFlow {
@@ -22,7 +21,8 @@ public class ProgramFlow {
 	private int verbosityLevel;
 	
 	private LinkedList<DataSetRow> data;
-
+	private int numberOfAttributes;
+	
 	public ProgramFlow(String[] args) {
 		setDefaults();
 		processCommandLineArgs(args);
@@ -41,6 +41,7 @@ public class ProgramFlow {
 		this.verbosityLevel = 1;
 		
 		this.data = new LinkedList<>();
+		this.numberOfAttributes = 0;
 	}
 
 	private void processCommandLineArgs(String[] args) 
@@ -105,34 +106,34 @@ public class ProgramFlow {
 	{
 		Matcher matcher = Pattern.compile("(?:-[A-z])?([0-9]+)(?:-[A-z])([0-9]+)").matcher(fileName);
 		matcher.find();
-		int attributeNumber = Integer.parseInt(matcher.group(1));
+		this.numberOfAttributes = Integer.parseInt(matcher.group(1));
 		int trueFunctionDegree = Integer.parseInt(matcher.group(2));
-		tryToReadFile(attributeNumber);
+		tryToReadFile();
 		splitDataSetIntoKFolds();
 	}
 
-	private void tryToReadFile(int attributeNumber)
+	private void tryToReadFile()
 	{
 			Scanner scan;
 			try {
 				scan = new Scanner(new File(fileName));
-				readFile(scan, attributeNumber);
+				readFile(scan);
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 				System.exit(-1);
 			}
 	}
 	
-	private void readFile(Scanner scan, int attributeNumber)
+	private void readFile(Scanner scan)
 	{
 		while(scan.hasNext())
 		{
-			double[] attributes = new double[attributeNumber];
-			for (int i = 0; i < attributeNumber; i++)
+			double[] attributes = new double[this.numberOfAttributes];
+			for (int i = 0; i < this.numberOfAttributes; i++)
 			{
 				attributes[i] = scan.nextDouble();
 			}
-			data.add(new DataSetRow(attributes,scan.nextDouble()));
+			data.add(new DataSetRow(attributes, scan.nextDouble()));
 		}
 	}
 	
@@ -162,22 +163,48 @@ public class ProgramFlow {
 						.stream()
 						.filter(row -> row.getFold() != foldNumber)
 						.collect(Collectors.toList());
-				miniBatchGradientDescent(dataNotInFold);
+				miniBatchGradientDescent(d, dataNotInFold);
 			}
 		}
 	}
 	
-	private void miniBatchGradientDescent(List<DataSetRow> dataNotInFold)
+	private void miniBatchGradientDescent(int degree, List<DataSetRow> dataNotInFold)
 	{
-		LinkedList<Integer> weights = new LinkedList<>();
+		int weightsLength = 1 + (degree * this.numberOfAttributes);
+		int[] weights = new int[weightsLength];
 		int tIterations = 0;
 		int epochCount = 0;
 		double cost = 0;
 		double costChange = 0;
+		
 		while(!stopConditionsMet(epochCount, cost, costChange))
 		{
-			
+			List<List<DataSetRow>> batches = createMiniBatches(dataNotInFold);
+			for(List<DataSetRow> batch : batches)
+			{
+				for(int k = 0; k < weightsLength; k++)
+				{
+					
+				}
+			}
 		}
+	}
+
+	private List<List<DataSetRow>> createMiniBatches(List<DataSetRow> notInFold) {
+		List<List<DataSetRow>> batches = new LinkedList<>();
+		Collections.shuffle(notInFold);
+		int lastSub = 0;
+		for(int i = 0; i < notInFold.size(); i++) 
+		{
+			int subSize = i * batchSize;
+			if (i * batchSize > notInFold.size())
+			{
+				subSize = notInFold.size();
+			}
+			batches.add(notInFold.subList(lastSub, subSize));
+			lastSub = subSize;
+		}
+		return batches;
 	}
 	
 	private boolean stopConditionsMet(int epochCount, double cost, double costChange)
