@@ -26,8 +26,8 @@ public class ProgramFlow {
 	public ProgramFlow(String[] args) {
 		setDefaults();
 		processCommandLineArgs(args);
-		LinkedList<Fold> splitData = createDataSet();
-		run(splitData);
+		createDataSet();
+		run();
 	}
 
 	private void setDefaults()
@@ -101,15 +101,14 @@ public class ProgramFlow {
 		}
 	}
 		
-	private LinkedList<Fold> createDataSet()
+	private void createDataSet()
 	{
 		Matcher matcher = Pattern.compile("(?:-[A-z])?([0-9]+)(?:-[A-z])([0-9]+)").matcher(fileName);
 		matcher.find();
 		int attributeNumber = Integer.parseInt(matcher.group(1));
 		int trueFunctionDegree = Integer.parseInt(matcher.group(2));
 		tryToReadFile(attributeNumber);
-		LinkedList<Fold> splitData = splitDataSetIntoKFolds();
-		return splitData;
+		splitDataSetIntoKFolds();
 	}
 
 	private void tryToReadFile(int attributeNumber)
@@ -137,40 +136,38 @@ public class ProgramFlow {
 		}
 	}
 	
-	private LinkedList<Fold> splitDataSetIntoKFolds()
+	private void splitDataSetIntoKFolds()
 	{
-		LinkedList<Fold> splitData = new LinkedList<>();
-		LinkedList<DataSetRow> kFoldData = new LinkedList<>();
 		int rowCount = 0;
 		int foldNumber = 0;
 		for(DataSetRow row : data)
 		{
 			if(rowCount % kFolds == 0)
 			{
-				splitData.add(new Fold(foldNumber++, kFoldData));
-				kFoldData = new LinkedList<>();
+				foldNumber++;
 			}
-			kFoldData.add(row);
+			row.setFold(foldNumber);
 			rowCount++;
 		}
-		return splitData;
 	}
 	
-	private void run(LinkedList<Fold> splitData)
+	private void run()
 	{
+		int foldNumber = 0;
 		for(int d = this.smallestPolynomialDegree; d <= this.largestPolynomialDegree; d++)
 		{
-			for(Fold fold : splitData)
+			for (int k = 0; k < kFolds; k++) 
 			{
-				List<Fold> dataNotInFold = splitData.stream()
-						.filter(aFold -> aFold.getFoldNumber() != fold.getFoldNumber())
+				List<DataSetRow> dataNotInFold = data
+						.stream()
+						.filter(row -> row.getFold() != foldNumber)
 						.collect(Collectors.toList());
 				miniBatchGradientDescent(dataNotInFold);
 			}
 		}
 	}
 	
-	private void miniBatchGradientDescent(List<Fold> dataNotInFold)
+	private void miniBatchGradientDescent(List<DataSetRow> dataNotInFold)
 	{
 		LinkedList<Integer> weights = new LinkedList<>();
 		int tIterations = 0;

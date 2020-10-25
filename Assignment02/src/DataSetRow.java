@@ -3,11 +3,18 @@ public class DataSetRow
 {
 	private double[] attributes;
 	private double target;
+	private int fold;
 	
-	public DataSetRow(double[] attributes, double target)
+	public DataSetRow(double[] attributes, double target, int fold)
 	{
 		this.setAttributes(attributes);
 		this.setTarget(target);
+		this.setFold(fold);
+	}
+	
+	public DataSetRow(double[] attributes, double target)
+	{
+		this(attributes, target, -1);
 	}
 
 	public double[] getAttributes() 
@@ -33,6 +40,14 @@ public class DataSetRow
 	public void setTarget(double target)
 	{
 		this.target = target;
+	}
+
+	public int getFold() {
+		return fold;
+	}
+
+	public void setFold(int fold) {
+		this.fold = fold;
 	}
 
 	
