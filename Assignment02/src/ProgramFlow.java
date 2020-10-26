@@ -126,6 +126,7 @@ public class ProgramFlow {
 	
 	private void readFile(Scanner scan)
 	{
+		int pos = 0;
 		while(scan.hasNext())
 		{
 			double[] attributes = new double[this.numberOfAttributes];
@@ -133,7 +134,8 @@ public class ProgramFlow {
 			{
 				attributes[i] = scan.nextDouble();
 			}
-			data.add(new DataSetRow(attributes, scan.nextDouble()));
+			data.add(new DataSetRow(pos, attributes, scan.nextDouble()));
+			pos++;
 		}
 	}
 	
@@ -171,7 +173,7 @@ public class ProgramFlow {
 	private void miniBatchGradientDescent(int degree, List<DataSetRow> dataNotInFold)
 	{
 		int weightsLength = 1 + (degree * this.numberOfAttributes);
-		int[] weights = new int[weightsLength];
+		double[] weights = new double[weightsLength];
 		int tIterations = 0;
 		int epochCount = 0;
 		double cost = 0;
@@ -184,7 +186,7 @@ public class ProgramFlow {
 			{
 				for(int k = 0; k < weightsLength; k++)
 				{
-					
+					weights[k] = (weights[k] - learningRate * ( sum2x(batch, k) * sumWeightTimesX(weights, batch)));
 				}
 			}
 		}
@@ -223,5 +225,29 @@ public class ProgramFlow {
 			stopConditionsMet = true;
 		}
 		return stopConditionsMet;
+	}
+	
+	private double sum2x(List<DataSetRow> batch, int k)
+	{
+		double sum2x = 0;
+		for(DataSetRow row : batch)
+		{
+			sum2x += -2 * row.getAttributeAt(k);
+		}
+		return sum2x;
+	}
+	
+	private double sumWeightTimesX(double[] weights, List<DataSetRow> batch)
+	{
+		for (DataSetRow row : batch)
+		{
+			double sum = 0;
+			for (int j = 0; j < weights.length; j++)
+			{
+				sum += weights[j] * row.getAttributeAt(j);
+			}
+			double targetMinusSum = row.getTarget() - sum;
+		}
+		return -1;
 	}
 }
