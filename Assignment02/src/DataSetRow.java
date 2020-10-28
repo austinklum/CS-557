@@ -16,7 +16,7 @@ public class DataSetRow
 	
 	public DataSetRow(int position, double[] attributes, double target)
 	{
-		this(position,attributes, target, -1);
+		this(position, attributes, target, -1);
 	}
 
 	public double[] getAttributes() 

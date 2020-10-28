@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -165,19 +166,21 @@ public class ProgramFlow {
 						.stream()
 						.filter(row -> row.getFold() != foldNumber)
 						.collect(Collectors.toList());
-				miniBatchGradientDescent(d, dataNotInFold);
+				double[] weights = miniBatchGradientDescent(d, dataNotInFold);
+				Arrays.stream(weights).forEach(w -> System.out.print(" " + w));
+				System.out.println("");
 			}
 		}
 	}
 	
-	private void miniBatchGradientDescent(int degree, List<DataSetRow> dataNotInFold)
+	private double[] miniBatchGradientDescent(int degree, List<DataSetRow> dataNotInFold)
 	{
 		int weightsLength = 1 + (degree * this.numberOfAttributes);
 		double[] weights = new double[weightsLength];
 		int tIterations = 0;
 		int epochCount = 0;
-		double cost = 0;
-		double costChange = 0;
+		double cost = 1;
+		double costChange = 1;
 		
 		while(!stopConditionsMet(epochCount, cost, costChange))
 		{
@@ -186,10 +189,20 @@ public class ProgramFlow {
 			{
 				for(int k = 0; k < weightsLength; k++)
 				{
-					weights[k] = (weights[k] - learningRate * ( sum2x(batch, k) * sumWeightTimesX(weights, batch)));
+					weights[k] = calculateNewWeight(weights, batch, k);
 				}
+				tIterations++;
 			}
+			epochCount++;
 		}
+		return weights;
+	}
+
+	private double calculateNewWeight(double[] weights, List<DataSetRow> batch, int k) {
+		double gradient = calculateGradient(batch, weights, k);
+		double gradDesc = learningRate * gradient;
+		double newWeight = weights[k] - gradDesc;
+		return newWeight;
 	}
 
 	private List<List<DataSetRow>> createMiniBatches(List<DataSetRow> notInFold) {
@@ -203,8 +216,12 @@ public class ProgramFlow {
 			{
 				subSize = notInFold.size();
 			}
-			batches.add(notInFold.subList(lastSub, subSize));
+			batches.add(augmentData(notInFold.subList(lastSub, subSize)));
 			lastSub = subSize;
+		}
+		if (batchSize == 0)
+		{
+			batches.add(augmentData(notInFold));
 		}
 		return batches;
 	}
@@ -227,27 +244,28 @@ public class ProgramFlow {
 		return stopConditionsMet;
 	}
 	
-	private double sum2x(List<DataSetRow> batch, int k)
+	private double calculateGradient(List<DataSetRow> batch, double[] weights, int k)
 	{
-		double sum2x = 0;
-		for(DataSetRow row : batch)
-		{
-			sum2x += -2 * row.getAttributeAt(k);
-		}
-		return sum2x;
-	}
-	
-	private double sumWeightTimesX(double[] weights, List<DataSetRow> batch)
-	{
+		double unnormalizedGradient = 0;
 		for (DataSetRow row : batch)
 		{
+			double scalar = -2 * row.getAttributeAt(k);
 			double sum = 0;
 			for (int j = 0; j < weights.length; j++)
 			{
 				sum += weights[j] * row.getAttributeAt(j);
 			}
 			double targetMinusSum = row.getTarget() - sum;
+			unnormalizedGradient += scalar * targetMinusSum;
 		}
-		return -1;
+		double normalizedGradient = unnormalizedGradient / batch.size();
+		return normalizedGradient;
 	}
+	
+	private List<DataSetRow> augmentData(List<DataSetRow> rows)
+	{
+		
+		return null;
+	}
+	
 }
