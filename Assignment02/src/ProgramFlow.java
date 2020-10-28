@@ -184,7 +184,7 @@ public class ProgramFlow {
 		
 		while(!stopConditionsMet(epochCount, cost, costChange))
 		{
-			List<List<DataSetRow>> batches = createMiniBatches(dataNotInFold);
+			List<List<DataSetRow>> batches = createMiniBatches(dataNotInFold, weightsLength);
 			for(List<DataSetRow> batch : batches)
 			{
 				for(int k = 0; k < weightsLength; k++)
@@ -205,9 +205,16 @@ public class ProgramFlow {
 		return newWeight;
 	}
 
-	private List<List<DataSetRow>> createMiniBatches(List<DataSetRow> notInFold) {
+	private List<List<DataSetRow>> createMiniBatches(List<DataSetRow> notInFold, int weightsLength) {
 		List<List<DataSetRow>> batches = new LinkedList<>();
 		Collections.shuffle(notInFold);
+		
+		if (batchSize == 0)
+		{
+			batches.add(augmentData(notInFold, weightsLength));
+			return batches;
+		}
+		
 		int lastSub = 0;
 		for(int i = 0; i < notInFold.size(); i++) 
 		{
@@ -216,13 +223,10 @@ public class ProgramFlow {
 			{
 				subSize = notInFold.size();
 			}
-			batches.add(augmentData(notInFold.subList(lastSub, subSize)));
+			batches.add(augmentData(notInFold.subList(lastSub, subSize), weightsLength));
 			lastSub = subSize;
 		}
-		if (batchSize == 0)
-		{
-			batches.add(augmentData(notInFold));
-		}
+	
 		return batches;
 	}
 	
@@ -262,10 +266,29 @@ public class ProgramFlow {
 		return normalizedGradient;
 	}
 	
-	private List<DataSetRow> augmentData(List<DataSetRow> rows)
+	private List<DataSetRow> augmentData(List<DataSetRow> rows, int weightsLength)
 	{
-		
-		return null;
+		for (DataSetRow row : rows)
+		{
+			double[] newAttributes = new double[weightsLength];
+			newAttributes[0] = 1;
+			
+			int oldAttributesLength = row.getAttributes().length;
+			int pow = 0;
+			
+			for (int i = 1; i < weightsLength; i++)
+			{
+				int modI = (i-1) % oldAttributesLength;
+				if (modI == 0)
+				{
+					pow++;
+				}
+				double xSubi = row.getAttributeAt(modI);
+				newAttributes[i] = Math.pow(xSubi, pow);
+			}
+			row.setAttributes(newAttributes);
+		}
+		return rows;
 	}
 	
 }
