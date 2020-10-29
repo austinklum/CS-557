@@ -263,16 +263,26 @@ public class ProgramFlow {
 		for (DataSetRow row : batch)
 		{
 			double scalar = -2 * row.getAttributeAt(k);
-			double sum = 0;
-			for (int j = 0; j < weights.length; j++)
-			{
-				sum += weights[j] * row.getAttributeAt(j);
-			}
-			double targetMinusSum = row.getTarget() - sum;
-			unnormalizedGradient += scalar * targetMinusSum;
+			double cost = cost(weights, row);
+			unnormalizedGradient += scalar * cost;
 		}
 		double normalizedGradient = unnormalizedGradient / batch.size();
 		return normalizedGradient;
+	}
+
+	private double l2Loss(double[] weights, DataSetRow row)
+	{
+		return Math.pow(cost(weights, row), 2);
+	}
+	
+	private double cost(double[] weights, DataSetRow row) {
+		double sum = 0;
+		for (int j = 0; j < weights.length; j++)
+		{
+			sum += weights[j] * row.getAttributeAt(j);
+		}
+		double targetMinusSum = row.getTarget() - sum;
+		return targetMinusSum;
 	}
 	
 	private List<DataSetRow> augmentData(List<DataSetRow> rows, int weightsLength)
