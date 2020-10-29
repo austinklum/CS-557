@@ -198,7 +198,8 @@ public class ProgramFlow {
 		return weights;
 	}
 
-	private double calculateNewWeight(double[] weights, List<DataSetRow> batch, int k) {
+	private double calculateNewWeight(double[] weights, List<DataSetRow> batch, int k) 
+	{
 		double gradient = calculateGradient(batch, weights, k);
 		double gradDesc = learningRate * gradient;
 		double newWeight = weights[k] - gradDesc;
@@ -216,18 +217,26 @@ public class ProgramFlow {
 		}
 		
 		int lastSub = 0;
-		for(int i = 0; i < notInFold.size(); i++) 
+		int numBatches = (int)Math.ceil((double)notInFold.size() / batchSize);
+		for(int i = 0; i < numBatches; i++) 
 		{
-			int subSize = i * batchSize;
-			if (i * batchSize > notInFold.size())
-			{
-				subSize = notInFold.size();
-			}
-			batches.add(augmentData(notInFold.subList(lastSub, subSize), weightsLength));
-			lastSub = subSize;
+			int sublistEndIndex = getSublistEndIndex(notInFold.size(), lastSub);
+			
+			batches.add(augmentData(notInFold.subList(lastSub, sublistEndIndex), weightsLength));
+			lastSub = sublistEndIndex;
 		}
 	
 		return batches;
+	}
+
+	private int getSublistEndIndex(int notInFoldSize, int lastSub) 
+	{
+		int sublistEndIndex = lastSub + batchSize;
+		if (sublistEndIndex > notInFoldSize)
+		{
+			sublistEndIndex = notInFoldSize;
+		}
+		return sublistEndIndex;
 	}
 	
 	private boolean stopConditionsMet(int epochCount, double cost, double costChange)
