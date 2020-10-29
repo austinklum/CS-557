@@ -142,6 +142,7 @@ public class ProgramFlow {
 	
 	private void splitDataSetIntoKFolds()
 	{
+		Collections.shuffle(data);
 		int rowCount = 0;
 		int foldNumber = 0;
 		for(DataSetRow row : data)
@@ -157,17 +158,20 @@ public class ProgramFlow {
 	
 	private void run()
 	{
-		int foldNumber = 0;
-		LinkedList<Double> validationError = new LinkedList<Double>();
+		LinkedList<Double> validationErrors = new LinkedList<Double>();
 		for(int d = this.smallestPolynomialDegree; d <= this.largestPolynomialDegree; d++)
 		{
-			for (int k = 0; k < kFolds; k++) 
+			List<DataSetRow> augmentedData = augmentData(d);
+			for (int k = 1; k <= kFolds; k++) 
 			{
-				List<DataSetRow> dataNotInFold = getDataNotInFold(foldNumber);
-				List<DataSetRow> dataInFold = getDataNotInFold(foldNumber);
+				List<DataSetRow> dataNotInFold = getDataNotInFold(augmentedData, k);
+				List<DataSetRow> dataInFold = getDataInFold(augmentedData, k);
 				
 				double[] weights = miniBatchGradientDescent(d, dataNotInFold);
-				validationError.add(calculateValidationError(weights, dataInFold))
+				double validationError = calculateValidationError(weights, dataInFold);
+				validationErrors.add(validationError);
+				
+				System.out.println(validationErrors.stream().mapToDouble(Double::doubleValue).sum());
 				Arrays.stream(weights).forEach(w -> System.out.print(" " + w));
 				System.out.println("");
 			}
@@ -176,27 +180,32 @@ public class ProgramFlow {
 
 	private double calculateValidationError(double[] weights, List<DataSetRow> dataInFold)
 	{
+		double error = 0; 
 		for (DataSetRow row : dataInFold)
 		{
-			// row.getAttributeAt(index)
+			double predictionY = predictY(weights, row);
+			double YDifference = row.getTarget() - predictionY;
+
+			error += Math.pow(YDifference, 2);
 		}
-		return -1;
+		double errorNormalized = error / dataInFold.size();
+		return errorNormalized;
 	}
 	
-	private List<DataSetRow> getDataNotInFold(int foldNumber) {
-		List<DataSetRow> dataNotInFold = data
+	private List<DataSetRow> getDataNotInFold(List<DataSetRow> augmentedData, int foldNumber) {
+		List<DataSetRow> dataNotInFold = augmentedData
 				.stream()
 				.filter(row -> row.getFold() != foldNumber)
 				.collect(Collectors.toList());
 		return dataNotInFold;
 	}
 	
-	private List<DataSetRow> getDataInFold(int foldNumber) {
-		List<DataSetRow> dataNotInFold = data
+	private List<DataSetRow> getDataInFold(List<DataSetRow> augmentedData, int foldNumber) {
+		List<DataSetRow> dataInFold = augmentedData
 				.stream()
 				.filter(row -> row.getFold() == foldNumber)
 				.collect(Collectors.toList());
-		return dataNotInFold;
+		return dataInFold;
 	}
 	
 	private double[] miniBatchGradientDescent(int degree, List<DataSetRow> dataNotInFold)
@@ -238,7 +247,7 @@ public class ProgramFlow {
 		
 		if (batchSize == 0)
 		{
-			batches.add(augmentData(notInFold, weightsLength));
+			batches.add(notInFold);
 			return batches;
 		}
 		
@@ -248,7 +257,7 @@ public class ProgramFlow {
 		{
 			int sublistEndIndex = getSublistEndIndex(notInFold.size(), lastSub);
 			
-			batches.add(augmentData(notInFold.subList(lastSub, sublistEndIndex), weightsLength));
+			batches.add(notInFold.subList(lastSub, sublistEndIndex));
 			lastSub = sublistEndIndex;
 		}
 	
@@ -302,18 +311,25 @@ public class ProgramFlow {
 	}
 	
 	private double cost(double[] weights, DataSetRow row) {
-		double sum = 0;
-		for (int j = 0; j < weights.length; j++)
-		{
-			sum += weights[j] * row.getAttributeAt(j);
-		}
-		double targetMinusSum = row.getTarget() - sum;
+		double predictionY = predictY(weights, row);
+		double targetMinusSum = row.getTarget() - predictionY;
 		return targetMinusSum;
 	}
+
+	private double predictY(double[] weights, DataSetRow row) {
+		double predictedY = 0;
+		for (int j = 0; j < weights.length; j++)
+		{
+			predictedY += weights[j] * row.getAttributeAt(j);
+		}
+		return predictedY;
+	}
 	
-	private List<DataSetRow> augmentData(List<DataSetRow> rows, int weightsLength)
+	private List<DataSetRow> augmentData(int degree)
 	{
-		for (DataSetRow row : rows)
+		int weightsLength = 1 + (degree * this.numberOfAttributes);
+		List<DataSetRow> augmentedData = data.stream().collect(Collectors.toList());
+		for (DataSetRow row : augmentedData)
 		{
 			double[] newAttributes = new double[weightsLength];
 			newAttributes[0] = 1;
@@ -333,7 +349,6 @@ public class ProgramFlow {
 			}
 			row.setAttributes(newAttributes);
 		}
-		return rows;
+		return augmentedData;
 	}
-	
 }
