@@ -158,19 +158,45 @@ public class ProgramFlow {
 	private void run()
 	{
 		int foldNumber = 0;
+		LinkedList<Double> validationError = new LinkedList<Double>();
 		for(int d = this.smallestPolynomialDegree; d <= this.largestPolynomialDegree; d++)
 		{
 			for (int k = 0; k < kFolds; k++) 
 			{
-				List<DataSetRow> dataNotInFold = data
-						.stream()
-						.filter(row -> row.getFold() != foldNumber)
-						.collect(Collectors.toList());
+				List<DataSetRow> dataNotInFold = getDataNotInFold(foldNumber);
+				List<DataSetRow> dataInFold = getDataNotInFold(foldNumber);
+				
 				double[] weights = miniBatchGradientDescent(d, dataNotInFold);
+				validationError.add(calculateValidationError(weights, dataInFold))
 				Arrays.stream(weights).forEach(w -> System.out.print(" " + w));
 				System.out.println("");
 			}
 		}
+	}
+
+	private double calculateValidationError(double[] weights, List<DataSetRow> dataInFold)
+	{
+		for (DataSetRow row : dataInFold)
+		{
+			// row.getAttributeAt(index)
+		}
+		return -1;
+	}
+	
+	private List<DataSetRow> getDataNotInFold(int foldNumber) {
+		List<DataSetRow> dataNotInFold = data
+				.stream()
+				.filter(row -> row.getFold() != foldNumber)
+				.collect(Collectors.toList());
+		return dataNotInFold;
+	}
+	
+	private List<DataSetRow> getDataInFold(int foldNumber) {
+		List<DataSetRow> dataNotInFold = data
+				.stream()
+				.filter(row -> row.getFold() == foldNumber)
+				.collect(Collectors.toList());
+		return dataNotInFold;
 	}
 	
 	private double[] miniBatchGradientDescent(int degree, List<DataSetRow> dataNotInFold)
