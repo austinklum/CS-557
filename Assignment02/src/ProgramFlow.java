@@ -173,14 +173,16 @@ public class ProgramFlow {
 				List<DataSetRow> dataNotInFold = getDataNotInFold(augmentedData, k);
 				List<DataSetRow> dataInFold = getDataInFold(augmentedData, k);
 				
+				print(3, "   * Holding out Fold " + k + "...\n");
+				
 				double[] weights = miniBatchGradientDescent(d, dataNotInFold);
-
+				
 				double trainError = calculateValidationError(weights, dataNotInFold);
 				double validationError = calculateValidationError(weights, dataInFold);
 				
 				trainErrorSum += trainError;
 				validationErrorSum += validationError;
-				
+				printModel(weights);
 				printError("F_" + k, trainError, validationError);
 //				System.out.print(trainErrors.stream().mapToDouble(Double::doubleValue).sum() + " ");
 //				System.out.println(validationErrors.stream().mapToDouble(Double::doubleValue).sum());
@@ -231,7 +233,7 @@ public class ProgramFlow {
 		int epochCount = 0;
 		double cost = 1;
 		double costChange = 1;
-		
+		long startTime = System.currentTimeMillis();
 		while(!stopConditionsMet(epochCount, cost, costChange))
 		{
 			List<List<DataSetRow>> batches = createMiniBatches(dataNotInFold, weightsLength);
@@ -245,6 +247,10 @@ public class ProgramFlow {
 			}
 			epochCount++;
 		}
+		long endTime = System.currentTimeMillis();
+		long trainTime = endTime - startTime;
+		double timePerIteration = (double) tIterations / trainTime;
+		print(3, "     Training took " + trainTime + "ms, " + epochCount + " epochs, " + tIterations + " iterations (" + timePerIteration + "ms / iteration)\n");
 		return weights;
 	}
 
@@ -294,14 +300,17 @@ public class ProgramFlow {
 		boolean stopConditionsMet = false;
 		if (epochCount == epochLimit)
 		{
+			print(3, "     GD Stop condition: EpochLimit reached\n");
 			stopConditionsMet = true;
 		}
 		else if (cost < Math.pow(10, -10))
 		{
+			print(3, "     GD Stop condition: Cost ~= 0\n");
 			stopConditionsMet = true;
 		}
 		else if (costChange < Math.pow(10, -10))
 		{
+			print(3, "      GD Stop condition: DeltaCost ~= 0\n");
 			stopConditionsMet = true;
 		}
 		return stopConditionsMet;
@@ -385,9 +394,14 @@ public class ProgramFlow {
 	
 	private void printError(String fold, double trainMSE, double validMSE)
 	{
-		if (verbosityLevel > 1)
+		if (verbosityLevel == 2)
 		{
 			System.out.printf("  %s\t\t%.6f\t%,6f\n", fold, trainMSE, validMSE);
+		}
+		if (verbosityLevel > 2)
+		{
+			System.out.printf("     CurFoldTrainErr:     %.6f\n", trainMSE);
+			System.out.printf("     CurFoldValidErr:     %.6f\n\n", validMSE);
 		}
 	}
 	
@@ -397,19 +411,43 @@ public class ProgramFlow {
 		double validMSE = validMSESum / kFolds;
 		String avgLabel = "Avg:";
 		
-		if(verbosityLevel == 1)
+		if (verbosityLevel == 1)
 		{
 			avgLabel = Integer.toString(degree);
 		}
-		
-		System.out.printf("%6s\t\t%.6f\t%,6f\n", avgLabel, trainMSE, validMSE);
+		if (verbosityLevel <= 2)
+		{
+			System.out.printf("%6s\t\t%.6f\t%,6f\n", avgLabel, trainMSE, validMSE);
+		}
+		if (verbosityLevel > 2)
+		{
+			System.out.println("   * Averaging across the folds");
+			System.out.printf("     AvgFoldTrainError:   %.6f\n", trainMSE);
+			System.out.printf("     AvgFoldValidError:   %.6f\n", validMSE);
+		}
 	}
 	
 	private void printDegreeHeader(int d)
 	{
-		print(2, "----------------------------------\n");
+		printWhen(2, "----------------------------------\n");
 		print(2, "* Testing degree " + d + "\n");
-		print(2, "\t\tTrainMSE\tValidMSE\n");
+		printWhen(2, "\t\tTrainMSE\tValidMSE\n");
+	}
+	
+	private void printModel(double[] weights)
+	{
+		System.out.print("     Model: Y = ");
+		System.out.printf("%.4f", weights[0]);
+		for (int i = 1; i < weights.length; i++)
+		{
+			int attrCount = 1;
+			while(attrCount <= numberOfAttributes)
+			{
+				System.out.printf(" + %.4f X%d ^%d", weights[i], attrCount, i);
+				attrCount++;
+			}
+		}
+		System.out.println("");
 	}
 	
 }
