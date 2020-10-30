@@ -159,6 +159,7 @@ public class ProgramFlow {
 	private void run()
 	{
 		LinkedList<Double> validationErrors = new LinkedList<Double>();
+		LinkedList<Double> trainErrors = new LinkedList<Double>();
 		for(int d = this.smallestPolynomialDegree; d <= this.largestPolynomialDegree; d++)
 		{
 			List<DataSetRow> augmentedData = augmentData(d);
@@ -168,9 +169,13 @@ public class ProgramFlow {
 				List<DataSetRow> dataInFold = getDataInFold(augmentedData, k);
 				
 				double[] weights = miniBatchGradientDescent(d, dataNotInFold);
+
+				double trainError = calculateValidationError(weights, dataNotInFold);
 				double validationError = calculateValidationError(weights, dataInFold);
+				trainErrors.add(trainError);
 				validationErrors.add(validationError);
 				
+				System.out.print(trainErrors.stream().mapToDouble(Double::doubleValue).sum() + " ");
 				System.out.println(validationErrors.stream().mapToDouble(Double::doubleValue).sum());
 				Arrays.stream(weights).forEach(w -> System.out.print(" " + w));
 				System.out.println("");
