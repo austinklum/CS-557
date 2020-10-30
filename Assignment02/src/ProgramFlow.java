@@ -160,8 +160,13 @@ public class ProgramFlow {
 	{
 		LinkedList<Double> validationErrors = new LinkedList<Double>();
 		LinkedList<Double> trainErrors = new LinkedList<Double>();
+		print(1, "Using " + kFolds + "-fold cross-validation.\n");
+		printWhen(1,"Degree\t\tTrainMSE\tValidMSE\n");
 		for(int d = this.smallestPolynomialDegree; d <= this.largestPolynomialDegree; d++)
 		{
+			printDegreeHeader(d);
+			double trainErrorSum = 0;
+			double validationErrorSum = 0;
 			List<DataSetRow> augmentedData = augmentData(d);
 			for (int k = 1; k <= kFolds; k++) 
 			{
@@ -172,16 +177,21 @@ public class ProgramFlow {
 
 				double trainError = calculateValidationError(weights, dataNotInFold);
 				double validationError = calculateValidationError(weights, dataInFold);
-				trainErrors.add(trainError);
-				validationErrors.add(validationError);
 				
-				System.out.print(trainErrors.stream().mapToDouble(Double::doubleValue).sum() + " ");
-				System.out.println(validationErrors.stream().mapToDouble(Double::doubleValue).sum());
-				Arrays.stream(weights).forEach(w -> System.out.print(" " + w));
-				System.out.println("");
+				trainErrorSum += trainError;
+				validationErrorSum += validationError;
+				
+				printError("F_" + k, trainError, validationError);
+//				System.out.print(trainErrors.stream().mapToDouble(Double::doubleValue).sum() + " ");
+//				System.out.println(validationErrors.stream().mapToDouble(Double::doubleValue).sum());
+//				Arrays.stream(weights).forEach(w -> System.out.print(" " + w));
+//				System.out.println("");
 			}
+			printAvgError(d, trainErrorSum, validationErrorSum);
 		}
 	}
+
+
 
 	private double calculateValidationError(double[] weights, List<DataSetRow> dataInFold)
 	{
@@ -356,4 +366,50 @@ public class ProgramFlow {
 		}
 		return augmentedData;
 	}
+	
+	private void print(int verbosity, String message)
+	{
+		if (verbosity <= verbosityLevel)
+		{
+			System.out.print(message);
+		}
+	}
+	
+	private void printWhen(int verbosity, String message)
+	{
+		if (verbosity == verbosityLevel)
+		{
+			System.out.print(message);
+		}
+	}
+	
+	private void printError(String fold, double trainMSE, double validMSE)
+	{
+		if (verbosityLevel > 1)
+		{
+			System.out.printf("  %s\t\t%.6f\t%,6f\n", fold, trainMSE, validMSE);
+		}
+	}
+	
+	private void printAvgError(int degree, double trainMSESum, double validMSESum)
+	{
+		double trainMSE = trainMSESum / kFolds;
+		double validMSE = validMSESum / kFolds;
+		String avgLabel = "Avg:";
+		
+		if(verbosityLevel == 1)
+		{
+			avgLabel = Integer.toString(degree);
+		}
+		
+		System.out.printf("%6s\t\t%.6f\t%,6f\n", avgLabel, trainMSE, validMSE);
+	}
+	
+	private void printDegreeHeader(int d)
+	{
+		print(2, "----------------------------------\n");
+		print(2, "* Testing degree " + d + "\n");
+		print(2, "\t\tTrainMSE\tValidMSE\n");
+	}
+	
 }
