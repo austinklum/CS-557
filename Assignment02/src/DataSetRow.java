@@ -1,4 +1,6 @@
-
+/**
+ * @author Austin Klum
+ */
 public class DataSetRow 
 {
 	private double[] attributes;

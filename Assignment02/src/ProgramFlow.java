@@ -1,3 +1,7 @@
+/**
+ * @author Austin Klum
+ */
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
@@ -179,6 +183,12 @@ public class ProgramFlow {
 			{
 				List<DataSetRow> dataNotInFold = getDataNotInFold(augmentedData, k);
 				List<DataSetRow> dataInFold = getDataInFold(augmentedData, k);
+				
+				if (kFolds == 1)
+				{
+					dataNotInFold = augmentedData;
+					dataInFold = augmentedData;
+				}
 				
 				print(3, "   * Holding out Fold " + k + "...\n");
 				
