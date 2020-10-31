@@ -24,6 +24,11 @@ public class ProgramFlow {
 	private LinkedList<DataSetRow> data;
 	private int numberOfAttributes;
 	
+	// ewww these are globals
+	private double cost;
+	private double costChange;
+	private boolean isFirstIter;
+	
 	public ProgramFlow(String[] args) {
 		setDefaults();
 		processCommandLineArgs(args);
@@ -43,6 +48,10 @@ public class ProgramFlow {
 		
 		this.data = new LinkedList<>();
 		this.numberOfAttributes = 0;
+		
+		this.cost = 1;
+		this.costChange = 1;
+		this.isFirstIter = true;
 	}
 
 	private void processCommandLineArgs(String[] args) 
@@ -158,8 +167,6 @@ public class ProgramFlow {
 	
 	private void run()
 	{
-		LinkedList<Double> validationErrors = new LinkedList<Double>();
-		LinkedList<Double> trainErrors = new LinkedList<Double>();
 		print(1, "Using " + kFolds + "-fold cross-validation.\n");
 		printWhen(1,"Degree\t\tTrainMSE\tValidMSE\n");
 		for(int d = this.smallestPolynomialDegree; d <= this.largestPolynomialDegree; d++)
@@ -184,10 +191,6 @@ public class ProgramFlow {
 				validationErrorSum += validationError;
 				printModel(weights);
 				printError("F_" + k, trainError, validationError);
-//				System.out.print(trainErrors.stream().mapToDouble(Double::doubleValue).sum() + " ");
-//				System.out.println(validationErrors.stream().mapToDouble(Double::doubleValue).sum());
-//				Arrays.stream(weights).forEach(w -> System.out.print(" " + w));
-//				System.out.println("");
 			}
 			printAvgError(d, trainErrorSum, validationErrorSum);
 		}
@@ -231,26 +234,34 @@ public class ProgramFlow {
 		double[] weights = new double[weightsLength];
 		int tIterations = 0;
 		int epochCount = 0;
-		double cost = 1;
-		double costChange = 1;
+		print(4, "       * Beginning mini-batch gradient descent\n");
+		print(4, "         (alpha=" + learningRate + ", epochLimit=" + epochLimit + ", batchSize=" + batchSize + ")\n");
 		long startTime = System.currentTimeMillis();
-		while(!stopConditionsMet(epochCount, cost, costChange))
+		while(!stopConditionsMet(epochCount))
 		{
 			List<List<DataSetRow>> batches = createMiniBatches(dataNotInFold, weightsLength);
 			for(List<DataSetRow> batch : batches)
 			{
+				
 				for(int k = 0; k < weightsLength; k++)
 				{
 					weights[k] = calculateNewWeight(weights, batch, k);
 				}
 				tIterations++;
 			}
+			if (epochCount % 1000 == 0)
+			{
+				printEpochStats(epochCount, tIterations, weights);
+			}
 			epochCount++;
 		}
 		long endTime = System.currentTimeMillis();
+		printEpochStats(epochCount, tIterations, weights);
+		print(4, "      * Done with fitting!\n");
 		long trainTime = endTime - startTime;
 		double timePerIteration = (double) tIterations / trainTime;
 		print(3, "     Training took " + trainTime + "ms, " + epochCount + " epochs, " + tIterations + " iterations (" + timePerIteration + "ms / iteration)\n");
+		isFirstIter = true;
 		return weights;
 	}
 
@@ -295,7 +306,7 @@ public class ProgramFlow {
 		return sublistEndIndex;
 	}
 	
-	private boolean stopConditionsMet(int epochCount, double cost, double costChange)
+	private boolean stopConditionsMet(int epochCount)
 	{
 		boolean stopConditionsMet = false;
 		if (epochCount == epochLimit)
@@ -308,11 +319,11 @@ public class ProgramFlow {
 			print(3, "     GD Stop condition: Cost ~= 0\n");
 			stopConditionsMet = true;
 		}
-		else if (costChange < Math.pow(10, -10))
-		{
-			print(3, "      GD Stop condition: DeltaCost ~= 0\n");
-			stopConditionsMet = true;
-		}
+//		else if (costChange < Math.pow(10, -10))
+//		{
+//			print(3, "      GD Stop condition: DeltaCost ~= 0\n");
+//			stopConditionsMet = true;
+//		}
 		return stopConditionsMet;
 	}
 	
@@ -323,10 +334,27 @@ public class ProgramFlow {
 		{
 			double scalar = -2 * row.getAttributeAt(k);
 			double cost = cost(weights, row);
+			costBookKeeping(cost);
 			unnormalizedGradient += scalar * cost;
 		}
 		double normalizedGradient = unnormalizedGradient / batch.size();
 		return normalizedGradient;
+	}
+
+	private void costBookKeeping(double cost) 
+	{
+		double costSquared = Math.pow(cost, 2);
+		if (isFirstIter) 
+		{
+			isFirstIter = false;
+			this.costChange = costSquared;
+			this.cost = costSquared;
+		}
+		else
+		{
+			this.costChange = this.cost - costSquared; // eww... This is shoe horned in
+			this.cost = costSquared; // these definitely shouldn't be globals..
+		}
 	}
 
 	private double l2Loss(double[] weights, DataSetRow row)
@@ -436,6 +464,10 @@ public class ProgramFlow {
 	
 	private void printModel(double[] weights)
 	{
+		if (verbosityLevel < 3)
+		{
+			return;
+		}
 		System.out.print("     Model: Y = ");
 		System.out.printf("%.4f", weights[0]);
 		for (int i = 1; i < weights.length; i++)
@@ -448,6 +480,23 @@ public class ProgramFlow {
 			}
 		}
 		System.out.println("");
+	}
+	
+	private void printEpochStats(int epochCount, int tIterations, double[] weights)
+	{
+		if (verbosityLevel < 4)
+		{
+			return;
+		}
+		System.out.printf("         Epoch %6d (iter %6d): Cost = %.9f;", epochCount, tIterations, cost);
+		if (verbosityLevel == 5)
+		{
+			printModel(weights);
+		}
+		else
+		{
+			System.out.println("");
+		}
 	}
 	
 }
