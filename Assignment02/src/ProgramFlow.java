@@ -240,6 +240,14 @@ public class ProgramFlow {
 		while(!stopConditionsMet(epochCount))
 		{
 			List<List<DataSetRow>> batches = createMiniBatches(dataNotInFold, weightsLength);
+			double costBatch = costBatches(weights, batches);  
+			this.costChange = Math.abs(cost - costBatch);
+			//System.out.println("Cost: " + cost + " CostBatch: " + costBatch + " CostChange: " + costChange);
+			this.cost = costBatch;
+			if (epochCount % 1000 == 0)
+			{
+				printEpochStats(epochCount, tIterations, weights);
+			}
 			for(List<DataSetRow> batch : batches)
 			{
 				
@@ -247,11 +255,8 @@ public class ProgramFlow {
 				{
 					weights[k] = calculateNewWeight(weights, batch, k);
 				}
+				
 				tIterations++;
-			}
-			if (epochCount % 1000 == 0)
-			{
-				printEpochStats(epochCount, tIterations, weights);
 			}
 			epochCount++;
 		}
@@ -319,11 +324,13 @@ public class ProgramFlow {
 			print(3, "     GD Stop condition: Cost ~= 0\n");
 			stopConditionsMet = true;
 		}
-//		else if (costChange < Math.pow(10, -10))
-//		{
-//			print(3, "      GD Stop condition: DeltaCost ~= 0\n");
-//			stopConditionsMet = true;
-//		}
+		else if (costChange < Math.pow(10, -10))
+		{
+			//System.out.println("costChange: " + costChange);
+			print(3, "      GD Stop condition: DeltaCost ~= 0\n");
+			costChange = 1;
+			stopConditionsMet = true;
+		}
 		return stopConditionsMet;
 	}
 	
@@ -334,7 +341,7 @@ public class ProgramFlow {
 		{
 			double scalar = -2 * row.getAttributeAt(k);
 			double cost = cost(weights, row);
-			costBookKeeping(cost);
+			//costBookKeeping(cost);
 			unnormalizedGradient += scalar * cost;
 		}
 		double normalizedGradient = unnormalizedGradient / batch.size();
@@ -360,6 +367,33 @@ public class ProgramFlow {
 	private double l2Loss(double[] weights, DataSetRow row)
 	{
 		return Math.pow(cost(weights, row), 2);
+	}
+	
+	private double costBatch(double[] weights, List<DataSetRow> batch)
+	{
+		double sum = 0;
+		for(DataSetRow row : batch)
+		{
+			sum += Math.pow(cost(weights, row), 2);
+		}
+		double sumAvg = sum / batch.size();
+		return sumAvg;
+	}
+	
+	private double costBatches(double[] weights, List<List<DataSetRow>> batches)
+	{
+		double sum = 0;
+		int size = 0;
+		for(List<DataSetRow> batch : batches) 
+		{
+			for(DataSetRow row : batch)
+			{
+				sum += Math.pow(cost(weights, row), 2);
+			}
+			size += batch.size();
+		}
+		double sumAvg = sum / size;
+		return sumAvg;
 	}
 	
 	private double cost(double[] weights, DataSetRow row) {
