@@ -3,37 +3,38 @@
  */
 public class DataSetRow 
 {
-	private double[] attributes;
-	private double target;
-	private int fold;
+	private Double[] attributes;
+	private int target;
 	private int position;
+	private int targetLength;
 	
-	public DataSetRow(int position, double[] attributes, double target, int fold)
+	public DataSetRow(int position, Double[] attr, int targetPos, int targetLength)
 	{
 		this.setPosition(position);
-		this.setAttributes(attributes);
-		this.setTarget(target);
-		this.setFold(fold);
-	}
-	
-	public DataSetRow(int position, double[] attributes, double target)
-	{
-		this(position, attributes, target, -1);
+		this.setAttributes(attr);
+		this.setTarget(targetPos);
+		this.setTargetLength(targetLength);
 	}
 
-	public double[] getAttributes() 
+
+	public Double[] getAttributes() 
 	{
 		return this.attributes;
 	}
 
-	public double getAttributeAt(int index)
+	public Double getAttributeAt(int index)
 	{
 		return this.attributes[index];
 	}
 	
-	public void setAttributes(double[] attributes) 
+	public void setAttributes(Double[] attributes) 
 	{
 		this.attributes = attributes;
+	}
+	
+	public void setAttributeAt(int index, double value) 
+	{
+		this.attributes[index] = value;
 	}
 
 	public double getTarget()
@@ -41,25 +42,30 @@ public class DataSetRow
 		return this.target;
 	}
 
-	public void setTarget(double target)
+	public void setTarget(int target)
 	{
 		this.target = target;
-	}
-
-	public int getFold() {
-		return fold;
-	}
-
-	public void setFold(int fold) {
-		this.fold = fold;
 	}
 
 	public int getPosition() {
 		return position;
 	}
 
-	public void setPosition(int position) {
+	public void setPosition(int position) 
+	{
 		this.position = position;
+	}
+
+
+	public int getTargetLength() 
+	{
+		return targetLength;
+	}
+
+
+	public void setTargetLength(int targetLength) 
+	{
+		this.targetLength = targetLength;
 	}
 
 	

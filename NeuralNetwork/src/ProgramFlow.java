@@ -28,13 +28,13 @@ public class ProgramFlow {
 	private int verbosityLevel;
 	
 	private LinkedList<DataSetRow> data;
-	
-	private double[] dataArr;
+	private List<DataSetRow> trainSet;
+	private List<DataSetRow> testSet;
 	
 	public ProgramFlow(String[] args) {
 		setDefaults();
 		processCommandLineArgs(args);
-		createDataSet();
+		createDataSets();
 		run();
 	}
 
@@ -111,14 +111,11 @@ public class ProgramFlow {
 				+ "[-v verbosityLevel <INTEGER>]{1}");
 	}
 
-	private void createDataSet()
+	private void createDataSets()
 	{
-		Matcher matcher = Pattern.compile("(?:-[A-z])?([0-9]+)(?:-[A-z])([0-9]+)").matcher(fileName);
-		matcher.find();
-		//this.hiddenLayers.size() = Integer.parseInt(matcher.group(1));
-		int trueFunctionDegree = Integer.parseInt(matcher.group(2));
 		tryToReadFile();
-		//splitDataSetIntoKFolds();
+		featureScaling(data);
+		splitDataIntoSets();
 	}
 
 	private void tryToReadFile()
@@ -135,24 +132,76 @@ public class ProgramFlow {
 	
 	private void readFile(Scanner scan)
 	{
-//		int pos = 0;
-//		while(scan.hasNext())
-//		{
-//			double[] attributes = new double[this.hiddenLayers.size()];
-//			for (int i = 0; i < this.hiddenLayers.size(); i++)
-//			{
-//				attributes[i] = scan.nextDouble();
-//			}
-//			data.add(new DataSetRow(pos, attributes, scan.nextDouble()));
-//			pos++;
-//		}
+		int pos = 0;
 		while(scan.hasNext())
 		{
-			String line[] = scan.nextLine().split(") (");
-			Double[] attr = Stream.of(line[0].replaceAll("(", "").split(" ")).map(Double::valueOf).collect(Collectors.toList()).toArray(new Double[0]);
-			Double[] active = Stream.of(line[1].replaceAll(")", "").split(" ")).map(Double::valueOf).collect(Collectors.toList()).toArray(new Double[0]);
+			String line = scan.nextLine();
+			if(line.startsWith("#") || line.isEmpty())
+			{
+				continue;
+			}
+			String[] lineArr = scan.nextLine().split(") (");
+			String[] attrString = lineArr[0].replaceAll("(", "").split(" ");
+			String[] targetString = lineArr[1].replaceAll(")", "").split(" ");
 			
+			Double[] attr = Stream.of(attrString).map(Double::valueOf).collect(Collectors.toList()).toArray(new Double[attrString.length]);
+			int targetPos = 0;
+			while(!targetString[targetPos].equals("1"))
+			{
+				targetPos++;
+			}
+			
+			data.add(new DataSetRow(pos, attr, targetPos, targetString.length));
+			pos++;
 		}
+	}
+	
+	private void featureScaling(List<DataSetRow> data)
+	{
+		int numberOfFeatures = data.get(0).getAttributes().length;
+		for (int i = 0; i < numberOfFeatures; i++)
+		{
+			double max = data.get(0).getAttributeAt(i);
+			double min = data.get(0).getAttributeAt(i);
+			// Get min and max
+			for (DataSetRow row : data)
+			{ 
+				double value = row.getAttributeAt(i);
+				if (value > max)
+				{
+					max = value;
+				}
+				if (value < min)
+				{
+					min = value;
+				}
+			}
+			
+			scaleFeatureValues(i, data, max, min);		
+		}
+	}
+	
+	private void scaleFeatureValues(int i, List<DataSetRow> data, double max, double min)
+	{
+		for (DataSetRow row : data)
+		{
+			if (max == min)
+			{
+				row.setAttributeAt(i, -1);
+				continue;
+			}
+			double value = row.getAttributeAt(i);
+			double scaledValue = -1 + 2 * ((value - min) / (max - min));
+			row.setAttributeAt(i, scaledValue);
+		}
+	}
+	
+	private void splitDataIntoSets()
+	{
+		Collections.shuffle(data);
+		int count = (int) (data.size() * .8);
+		trainSet = data.subList(0, count);
+		testSet = data.subList(count, data.size());
 	}
 	
 	private void run()
@@ -174,22 +223,6 @@ public class ProgramFlow {
 		}
 		double errorNormalized = error / dataInFold.size();
 		return errorNormalized;
-	}
-	
-	private List<DataSetRow> getDataNotInFold(List<DataSetRow> augmentedData, int foldNumber) {
-		List<DataSetRow> dataNotInFold = augmentedData
-				.stream()
-				.filter(row -> row.getFold() != foldNumber)
-				.collect(Collectors.toList());
-		return dataNotInFold;
-	}
-	
-	private List<DataSetRow> getDataInFold(List<DataSetRow> augmentedData, int foldNumber) {
-		List<DataSetRow> dataInFold = augmentedData
-				.stream()
-				.filter(row -> row.getFold() == foldNumber)
-				.collect(Collectors.toList());
-		return dataInFold;
 	}
 	
 	private double[] miniBatchGradientDescent(int degree, List<DataSetRow> dataNotInFold)
@@ -375,33 +408,6 @@ public class ProgramFlow {
 			predictedY += weights[j] * row.getAttributeAt(j);
 		}
 		return predictedY;
-	}
-	
-	private List<DataSetRow> augmentData(int degree)
-	{
-		int weightsLength = 1 + (degree * this.hiddenLayers.size());
-		List<DataSetRow> augmentedData = data.stream().collect(Collectors.toList());
-		for (DataSetRow row : augmentedData)
-		{
-			double[] newAttributes = new double[weightsLength];
-			newAttributes[0] = 1;
-			
-			int oldAttributesLength = row.getAttributes().length;
-			int pow = 0;
-			
-			for (int i = 1; i < weightsLength; i++)
-			{
-				int modI = (i-1) % oldAttributesLength;
-				if (modI == 0)
-				{
-					pow++;
-				}
-				double xSubi = row.getAttributeAt(modI);
-				newAttributes[i] = Math.pow(xSubi, pow);
-			}
-			row.setAttributes(newAttributes);
-		}
-		return augmentedData;
 	}
 	
 	private void print(int verbosity, String message)
