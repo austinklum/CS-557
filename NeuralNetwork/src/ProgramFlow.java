@@ -12,26 +12,24 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ProgramFlow {
 	// Required
 	private String fileName;
 	// Optional
-	private int kFolds;
-	private int smallestPolynomialDegree;
-	private int largestPolynomialDegree;
+	private ArrayList<Integer> hiddenLayers;
+	private boolean isLogLoss;
 	private double learningRate;
 	private int epochLimit;
 	private int batchSize;
+	private double regularization;
+	private double epsilonRange;
 	private int verbosityLevel;
 	
 	private LinkedList<DataSetRow> data;
-	private ArrayList<Integer> hiddenLayers;
 	
-	// ewww these are globals
-	private double cost;
-	private double costChange;
-	private boolean isFirstIter;
+	private double[] dataArr;
 	
 	public ProgramFlow(String[] args) {
 		setDefaults();
@@ -42,20 +40,16 @@ public class ProgramFlow {
 
 	private void setDefaults()
 	{
-		this.kFolds = 5;
-		this.smallestPolynomialDegree = 1;
-		this.largestPolynomialDegree = smallestPolynomialDegree;
-		this.learningRate = .005;
-		this.epochLimit = 10000;
-		this.batchSize = 0;
+		this.hiddenLayers = new ArrayList<>();
+		this.isLogLoss = false;
+		this.learningRate = .01;
+		this.epochLimit = 1000;
+		this.batchSize = 1;
+		this.regularization = 0.0;
+		this.epsilonRange = .01;
 		this.verbosityLevel = 1;
 		
 		this.data = new LinkedList<>();
-		this.hiddenLayers = new ArrayList<>();
-		
-		this.cost = 1;
-		this.costChange = 1;
-		this.isFirstIter = true;
 	}
 
 	private void processCommandLineArgs(String[] args) 
@@ -75,11 +69,8 @@ public class ProgramFlow {
 						this.hiddenLayers.add(Integer.parseInt(args[++i]));
 					}
 					break;
-				case "-d":
-					this.smallestPolynomialDegree = Integer.parseInt(args[++i]);
-					break;
-				case "-D":
-					this.largestPolynomialDegree = Integer.parseInt(args[++i]);
+				case "-l":
+					this.isLogLoss = true;
 					break;
 				case "-a":
 					this.learningRate = Double.parseDouble(args[++i]);
@@ -90,6 +81,12 @@ public class ProgramFlow {
 				case "-m":
 					this.batchSize = Integer.parseInt(args[++i]);
 					break;
+				case "-r":
+					this.regularization = Integer.parseInt(args[++i]);
+					break;
+				case "-w":
+					this.epsilonRange = Integer.parseInt(args[++i]);
+					break;
 				case "-v":
 					this.verbosityLevel = Integer.parseInt(args[++i]);
 					break;
@@ -99,37 +96,29 @@ public class ProgramFlow {
 					break;
 			}
 		}
-		setLargestPolynomialDegreeDefault();
 	}
 
 	private void printInvalidArgUsage(String arg) {
 		System.out.println(arg + " is not a supported command-line argument.");
 		System.out.println("Usage: -f fileName <FILENAME> "
-				+ "[-k kFolds <INTEGER>{5}] "
-				+ "[-d smallestPolynomialDegree <INTEGER>{1}] "
-				+ "[-D largestPolynomialDegree <INTEGER>{smallestPolynomialDegree}]"
-				+ "[-a learningRate <DOUBLE>{.005}]"
-				+ "[-e epochLimit <INTEGER>{10000}]"
-				+ "[-m batchSize <INTEGER>{0}]"
+				+ "[-h <NH> <S1 <S2> .. hiddenLayers <INTEGERLIST>{0}] "
+				+ "[-l IsLogLoss {false}] "
+				+ "[-a learningRate <DOUBLE>{.01}] "
+				+ "[-e epochLimit <INTEGER>{1000}] "
+				+ "[-m batchSize <INTEGER>{1}] "
+				+ "[-r regularization <DOUBLE>{0.0}] "
+				+ "[-w epsilonRange <DOUBLE>{0.01}] "
 				+ "[-v verbosityLevel <INTEGER>]{1}");
 	}
 
-	private void setLargestPolynomialDegreeDefault()
-	{
-		if (this.largestPolynomialDegree == 1)
-		{
-			this.largestPolynomialDegree = this.smallestPolynomialDegree;
-		}
-	}
-		
 	private void createDataSet()
 	{
 		Matcher matcher = Pattern.compile("(?:-[A-z])?([0-9]+)(?:-[A-z])([0-9]+)").matcher(fileName);
 		matcher.find();
-		this.numberOfHiddenLayers = Integer.parseInt(matcher.group(1));
+		//this.hiddenLayers.size() = Integer.parseInt(matcher.group(1));
 		int trueFunctionDegree = Integer.parseInt(matcher.group(2));
 		tryToReadFile();
-		splitDataSetIntoKFolds();
+		//splitDataSetIntoKFolds();
 	}
 
 	private void tryToReadFile()
@@ -146,70 +135,29 @@ public class ProgramFlow {
 	
 	private void readFile(Scanner scan)
 	{
-		int pos = 0;
+//		int pos = 0;
+//		while(scan.hasNext())
+//		{
+//			double[] attributes = new double[this.hiddenLayers.size()];
+//			for (int i = 0; i < this.hiddenLayers.size(); i++)
+//			{
+//				attributes[i] = scan.nextDouble();
+//			}
+//			data.add(new DataSetRow(pos, attributes, scan.nextDouble()));
+//			pos++;
+//		}
 		while(scan.hasNext())
 		{
-			double[] attributes = new double[this.numberOfHiddenLayers];
-			for (int i = 0; i < this.numberOfHiddenLayers; i++)
-			{
-				attributes[i] = scan.nextDouble();
-			}
-			data.add(new DataSetRow(pos, attributes, scan.nextDouble()));
-			pos++;
-		}
-	}
-	
-	private void splitDataSetIntoKFolds()
-	{
-		Collections.shuffle(data);
-		int rowCount = 0;
-		int foldNumber = 0;
-		for(DataSetRow row : data)
-		{
-			if(rowCount % kFolds == 0)
-			{
-				foldNumber++;
-			}
-			row.setFold(foldNumber);
-			rowCount++;
+			String line[] = scan.nextLine().split(") (");
+			Double[] attr = Stream.of(line[0].replaceAll("(", "").split(" ")).map(Double::valueOf).collect(Collectors.toList()).toArray(new Double[0]);
+			Double[] active = Stream.of(line[1].replaceAll(")", "").split(" ")).map(Double::valueOf).collect(Collectors.toList()).toArray(new Double[0]);
+			
 		}
 	}
 	
 	private void run()
 	{
-		print(1, "Using " + kFolds + "-fold cross-validation.\n");
-		printWhen(1,"Degree\t\tTrainMSE\tValidMSE\n");
-		for(int d = this.smallestPolynomialDegree; d <= this.largestPolynomialDegree; d++)
-		{
-			printDegreeHeader(d);
-			double trainErrorSum = 0;
-			double validationErrorSum = 0;
-			List<DataSetRow> augmentedData = augmentData(d);
-			for (int k = 1; k <= kFolds; k++) 
-			{
-				List<DataSetRow> dataNotInFold = getDataNotInFold(augmentedData, k);
-				List<DataSetRow> dataInFold = getDataInFold(augmentedData, k);
-				
-				if (kFolds == 1)
-				{
-					dataNotInFold = augmentedData;
-					dataInFold = augmentedData;
-				}
-				
-				print(3, "   * Holding out Fold " + k + "...\n");
-				
-				double[] weights = miniBatchGradientDescent(d, dataNotInFold);
-				
-				double trainError = calculateValidationError(weights, dataNotInFold);
-				double validationError = calculateValidationError(weights, dataInFold);
-				
-				trainErrorSum += trainError;
-				validationErrorSum += validationError;
-				printModel(weights);
-				printError("F_" + k, trainError, validationError);
-			}
-			printAvgError(d, trainErrorSum, validationErrorSum);
-		}
+		
 	}
 
 
@@ -246,20 +194,22 @@ public class ProgramFlow {
 	
 	private double[] miniBatchGradientDescent(int degree, List<DataSetRow> dataNotInFold)
 	{
-		int weightsLength = 1 + (degree * this.numberOfHiddenLayers);
+		int weightsLength = 1 + (degree * this.hiddenLayers.size());
 		double[] weights = new double[weightsLength];
 		int tIterations = 0;
 		int epochCount = 0;
+		double costChange = 0;
+		double cost = 0;
 		print(4, "       * Beginning mini-batch gradient descent\n");
 		print(4, "         (alpha=" + learningRate + ", epochLimit=" + epochLimit + ", batchSize=" + batchSize + ")\n");
 		long startTime = System.currentTimeMillis();
-		while(!stopConditionsMet(epochCount))
+		while(!stopConditionsMet(epochCount, cost, costChange))
 		{
 			List<List<DataSetRow>> batches = createMiniBatches(dataNotInFold, weightsLength);
 			double costBatch = costBatches(weights, batches);  
-			this.costChange = Math.abs(cost - costBatch);
+			costChange = Math.abs(cost - costBatch);
 			//System.out.println("Cost: " + cost + " CostBatch: " + costBatch + " CostChange: " + costChange);
-			this.cost = costBatch;
+			cost = costBatch;
 			if (epochCount % 1000 == 0)
 			{
 				printEpochStats(epochCount, tIterations, weights);
@@ -282,7 +232,7 @@ public class ProgramFlow {
 		long trainTime = endTime - startTime;
 		double timePerIteration = (double) tIterations / trainTime;
 		print(3, "     Training took " + trainTime + "ms, " + epochCount + " epochs, " + tIterations + " iterations (" + timePerIteration + "ms / iteration)\n");
-		isFirstIter = true;
+		
 		return weights;
 	}
 
@@ -327,7 +277,7 @@ public class ProgramFlow {
 		return sublistEndIndex;
 	}
 	
-	private boolean stopConditionsMet(int epochCount)
+	private boolean stopConditionsMet(int epochCount, double cost, double costChange)
 	{
 		boolean stopConditionsMet = false;
 		if (epochCount == epochLimit)
@@ -364,21 +314,21 @@ public class ProgramFlow {
 		return normalizedGradient;
 	}
 
-	private void costBookKeeping(double cost) 
-	{
-		double costSquared = Math.pow(cost, 2);
-		if (isFirstIter) 
-		{
-			isFirstIter = false;
-			this.costChange = costSquared;
-			this.cost = costSquared;
-		}
-		else
-		{
-			this.costChange = this.cost - costSquared; // eww... This is shoe horned in
-			this.cost = costSquared; // these definitely shouldn't be globals..
-		}
-	}
+//	private void costBookKeeping(double cost) 
+//	{
+//		double costSquared = Math.pow(cost, 2);
+//		if (isFirstIter) 
+//		{
+//			isFirstIter = false;
+//			this.costChange = costSquared;
+//			this.cost = costSquared;
+//		}
+//		else
+//		{
+//			this.costChange = this.cost - costSquared; // eww... This is shoe horned in
+//			this.cost = costSquared; // these definitely shouldn't be globals..
+//		}
+//	}
 
 	private double l2Loss(double[] weights, DataSetRow row)
 	{
@@ -429,7 +379,7 @@ public class ProgramFlow {
 	
 	private List<DataSetRow> augmentData(int degree)
 	{
-		int weightsLength = 1 + (degree * this.numberOfHiddenLayers);
+		int weightsLength = 1 + (degree * this.hiddenLayers.size());
 		List<DataSetRow> augmentedData = data.stream().collect(Collectors.toList());
 		for (DataSetRow row : augmentedData)
 		{
@@ -485,8 +435,8 @@ public class ProgramFlow {
 	
 	private void printAvgError(int degree, double trainMSESum, double validMSESum)
 	{
-		double trainMSE = trainMSESum / kFolds;
-		double validMSE = validMSESum / kFolds;
+		double trainMSE = trainMSESum / 1;//kFolds;
+		double validMSE = validMSESum / 1;//kFolds;
 		String avgLabel = "Avg:";
 		
 		if (verbosityLevel == 1)
@@ -523,7 +473,7 @@ public class ProgramFlow {
 		for (int i = 1; i < weights.length; i++)
 		{
 			int attrCount = 1;
-			while(attrCount <= numberOfHiddenLayers)
+			while(attrCount <= this.hiddenLayers.size())
 			{
 				System.out.printf(" + %.4f X%d ^%d", weights[i], attrCount, i);
 				attrCount++;
@@ -538,7 +488,7 @@ public class ProgramFlow {
 		{
 			return;
 		}
-		System.out.printf("         Epoch %6d (iter %6d): Cost = %.9f;", epochCount, tIterations, cost);
+		//System.out.printf("         Epoch %6d (iter %6d): Cost = %.9f;", epochCount, tIterations, cost);
 		if (verbosityLevel == 5)
 		{
 			printModel(weights);
