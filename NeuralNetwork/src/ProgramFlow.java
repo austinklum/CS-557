@@ -256,16 +256,29 @@ public class ProgramFlow {
 
 	private void backpropUpdate(DataSetRow row, double[][] weights)
 	{
+		double[] layerOutputs = new double[hiddenLayers.length + 2]; 
+		double[] layerInputs = new double[hiddenLayers.length + 2];
+		
+		for(int i = 0; i < row.getAttributes().length; i++)
+		{
+			layerOutputs[i] = row.getAttributeAt(i);
+		}
+		
 		for (double[] layer : hiddenLayers)
 		{
 			double activation = 0;
 			for (int j = 0; j < weights.length; j++)
 			{
-				double input = dotProduct(j, layer[j], weights);
-				activation = activationFunction.Activate(input);
+				layerInputs[j] = dotProduct(j, layerOutputs[j], weights);
+				layerOutputs[j] = activationFunction.Activate(layerInputs[j]);
 			}
-			
 		}
+		double change = 0;
+		for (int j = 0; j < hiddenLayers[hiddenLayers.length -1].length; j++) 
+		{
+			change = activationFunction.ActivatePrime(layerInputs[j]);
+		}
+		
 	}
 	
 	private double dotProduct(int j, double neuron, double[][] weights)
