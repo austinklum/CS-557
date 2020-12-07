@@ -1,4 +1,9 @@
 
-public class Neuron {
+public class Neuron 
+{
 
+	// Activation Function
+	// InEdges
+	// OutEdges
+	
 }

@@ -4,13 +4,11 @@
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,7 +16,7 @@ public class ProgramFlow {
 	// Required
 	private String fileName;
 	// Optional
-	private ArrayList<Integer> hiddenLayers;
+	private double[][] hiddenLayers;
 	private boolean isLogLoss;
 	private double learningRate;
 	private int epochLimit;
@@ -27,9 +25,13 @@ public class ProgramFlow {
 	private double epsilonRange;
 	private int verbosityLevel;
 	
+	private int attributeLength;
+	
 	private LinkedList<DataSetRow> data;
 	private List<DataSetRow> trainSet;
 	private List<DataSetRow> testSet;
+	
+	private ActivationFunction activationFunction;
 	
 	public ProgramFlow(String[] args) {
 		setDefaults();
@@ -40,7 +42,7 @@ public class ProgramFlow {
 
 	private void setDefaults()
 	{
-		this.hiddenLayers = new ArrayList<>();
+		this.hiddenLayers = new double[0][0];
 		this.isLogLoss = false;
 		this.learningRate = .01;
 		this.epochLimit = 1000;
@@ -50,6 +52,7 @@ public class ProgramFlow {
 		this.verbosityLevel = 1;
 		
 		this.data = new LinkedList<>();
+		this.activationFunction = new SigmoidActivation();
 	}
 
 	private void processCommandLineArgs(String[] args) 
@@ -62,11 +65,11 @@ public class ProgramFlow {
 					break;
 				case "-h":
 					int size = Integer.parseInt(args[++i]);
-					this.hiddenLayers = new ArrayList<Integer>(size);
+					this.hiddenLayers = new double[size][];
 					
 					for (int j = 0; j < size; j++)
 					{
-						this.hiddenLayers.add(Integer.parseInt(args[++i]));
+						this.hiddenLayers[j] = new double[Integer.parseInt(args[++i])];
 					}
 					break;
 				case "-l":
@@ -206,11 +209,75 @@ public class ProgramFlow {
 	
 	private void run()
 	{
+		//setup NN
+		double[][] weights = rand();
+		int tIterations = 0;
+		int epochs = 0;
+		double absoluteError = 1;
 		
+		while(!stopConditionsMet(epochs, absoluteError))
+		{
+			List<List<DataSetRow>> batches = createMiniBatches(trainSet);
+			for(List<DataSetRow> batch : batches)
+			{
+				for (DataSetRow row : batch)
+				{
+					backpropUpdate(row, weights);
+				}
+				for (int i = 0; i < weights.length; i++)
+				{
+					for (int j = 0; j < weights[i].length; j++) 
+					{
+						// calculateNewWeight();
+					}
+				}
+				tIterations++;
+			}
+			epochs++;
+		}
+		// trainNetwork(trainSet);
+		// evaluateAccuracy(testSet);
 	}
 
+	private double[][] rand()
+	{
+		double[][] weights = new double[hiddenLayers.length][];
+		for (int i = 0; i < weights.length; i++)
+		{
+			weights[i] = new double[hiddenLayers[i].length];
+			for (int j = 0; j < hiddenLayers[i].length; j++)
+			{
+				Random rand = new Random();
+				weights[i][j] = (epsilonRange * -1)	+ (epsilonRange - (epsilonRange * -1)) * rand.nextDouble();
+			}
+		}
+		return weights;
+	}
 
-
+	private void backpropUpdate(DataSetRow row, double[][] weights)
+	{
+		for (double[] layer : hiddenLayers)
+		{
+			double activation = 0;
+			for (int j = 0; j < weights.length; j++)
+			{
+				double input = dotProduct(j, layer[j], weights);
+				activation = activationFunction.Activate(input);
+			}
+			
+		}
+	}
+	
+	private double dotProduct(int j, double neuron, double[][] weights)
+	{
+		double result = 0;
+		for (int i = 0; i < weights.length; i++)
+		{
+			result += weights[i][j] * neuron;
+		}
+		return result;
+	}
+	
 	private double calculateValidationError(double[] weights, List<DataSetRow> dataInFold)
 	{
 		double error = 0; 
@@ -227,7 +294,7 @@ public class ProgramFlow {
 	
 	private double[] miniBatchGradientDescent(int degree, List<DataSetRow> dataNotInFold)
 	{
-		int weightsLength = 1 + (degree * this.hiddenLayers.size());
+		int weightsLength = 1; //+ (degree * this.hiddenLayers.size());
 		double[] weights = new double[weightsLength];
 		int tIterations = 0;
 		int epochCount = 0;
@@ -236,9 +303,10 @@ public class ProgramFlow {
 		print(4, "       * Beginning mini-batch gradient descent\n");
 		print(4, "         (alpha=" + learningRate + ", epochLimit=" + epochLimit + ", batchSize=" + batchSize + ")\n");
 		long startTime = System.currentTimeMillis();
-		while(!stopConditionsMet(epochCount, cost, costChange))
+		//while(!stopConditionsMet(epochCount, cost, costChange))
+		while(epochCount != epochLimit)
 		{
-			List<List<DataSetRow>> batches = createMiniBatches(dataNotInFold, weightsLength);
+			List<List<DataSetRow>> batches = new LinkedList<>();//createMiniBatches(dataNotInFold, weightsLength);
 			double costBatch = costBatches(weights, batches);  
 			costChange = Math.abs(cost - costBatch);
 			//System.out.println("Cost: " + cost + " CostBatch: " + costBatch + " CostChange: " + costChange);
@@ -277,40 +345,39 @@ public class ProgramFlow {
 		return newWeight;
 	}
 
-	private List<List<DataSetRow>> createMiniBatches(List<DataSetRow> notInFold, int weightsLength) {
+	private List<List<DataSetRow>> createMiniBatches(List<DataSetRow> fullSet) {
 		List<List<DataSetRow>> batches = new LinkedList<>();
-		Collections.shuffle(notInFold);
-		
+		Collections.shuffle(fullSet);
 		if (batchSize == 0)
 		{
-			batches.add(notInFold);
+			batches.add(fullSet);
 			return batches;
 		}
 		
 		int lastSub = 0;
-		int numBatches = (int)Math.ceil((double)notInFold.size() / batchSize);
+		int numBatches = (int)Math.ceil((double)fullSet.size() / batchSize);
 		for(int i = 0; i < numBatches; i++) 
 		{
-			int sublistEndIndex = getSublistEndIndex(notInFold.size(), lastSub);
+			int sublistEndIndex = getSublistEndIndex(fullSet.size(), lastSub);
 			
-			batches.add(notInFold.subList(lastSub, sublistEndIndex));
+			batches.add(fullSet.subList(lastSub, sublistEndIndex));
 			lastSub = sublistEndIndex;
 		}
 	
 		return batches;
 	}
 
-	private int getSublistEndIndex(int notInFoldSize, int lastSub) 
+	private int getSublistEndIndex(int fullSetSize, int lastSub) 
 	{
 		int sublistEndIndex = lastSub + batchSize;
-		if (sublistEndIndex > notInFoldSize)
+		if (sublistEndIndex > fullSetSize)
 		{
-			sublistEndIndex = notInFoldSize;
+			sublistEndIndex = fullSetSize;
 		}
 		return sublistEndIndex;
 	}
 	
-	private boolean stopConditionsMet(int epochCount, double cost, double costChange)
+	private boolean stopConditionsMet(int epochCount, double absoluteError)
 	{
 		boolean stopConditionsMet = false;
 		if (epochCount == epochLimit)
@@ -318,16 +385,9 @@ public class ProgramFlow {
 			print(3, "     GD Stop condition: EpochLimit reached\n");
 			stopConditionsMet = true;
 		}
-		else if (cost < Math.pow(10, -10))
+		else if (absoluteError < .01)
 		{
-			print(3, "     GD Stop condition: Cost ~= 0\n");
-			stopConditionsMet = true;
-		}
-		else if (costChange < Math.pow(10, -10))
-		{
-			//System.out.println("costChange: " + costChange);
-			print(3, "      GD Stop condition: DeltaCost ~= 0\n");
-			costChange = 1;
+			print(3, "     GD Stop condition: Absolute Error ~= 0\n");
 			stopConditionsMet = true;
 		}
 		return stopConditionsMet;
@@ -479,7 +539,7 @@ public class ProgramFlow {
 		for (int i = 1; i < weights.length; i++)
 		{
 			int attrCount = 1;
-			while(attrCount <= this.hiddenLayers.size())
+			while(attrCount <= this.hiddenLayers.length)
 			{
 				System.out.printf(" + %.4f X%d ^%d", weights[i], attrCount, i);
 				attrCount++;
