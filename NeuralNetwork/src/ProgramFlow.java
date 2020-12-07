@@ -16,7 +16,10 @@ public class ProgramFlow {
 	// Required
 	private String fileName;
 	// Optional
-	private double[][] hiddenLayers;
+	private Layer inputLayer;
+	private Layer[] hiddenLayers;
+	private Layer outputLayer;
+	
 	private boolean isLogLoss;
 	private double learningRate;
 	private int epochLimit;
@@ -42,7 +45,10 @@ public class ProgramFlow {
 
 	private void setDefaults()
 	{
-		this.hiddenLayers = new double[0][0];
+		this.inputLayer = new Layer(new LinkedList<Neuron>());
+		this.hiddenLayers = new Layer[0];
+		this.outputLayer = new Layer(new LinkedList<Neuron>());
+		
 		this.isLogLoss = false;
 		this.learningRate = .01;
 		this.epochLimit = 1000;
@@ -65,11 +71,11 @@ public class ProgramFlow {
 					break;
 				case "-h":
 					int size = Integer.parseInt(args[++i]);
-					this.hiddenLayers = new double[size][];
+					this.hiddenLayers = new Layer[size];
 					
 					for (int j = 0; j < size; j++)
 					{
-						this.hiddenLayers[j] = new double[Integer.parseInt(args[++i])];
+						//this.hiddenLayers[j] = new Layer[Integer.parseInt(args[++i])];
 					}
 					break;
 				case "-l":
@@ -210,7 +216,7 @@ public class ProgramFlow {
 	private void run()
 	{
 		//setup NN
-		double[][] weights = rand();
+		//double[][] weights = rand();
 		int tIterations = 0;
 		int epochs = 0;
 		double absoluteError = 1;
@@ -222,15 +228,15 @@ public class ProgramFlow {
 			{
 				for (DataSetRow row : batch)
 				{
-					backpropUpdate(row, weights);
+					backpropUpdate(row);
 				}
-				for (int i = 0; i < weights.length; i++)
-				{
-					for (int j = 0; j < weights[i].length; j++) 
-					{
-						// calculateNewWeight();
-					}
-				}
+//				for (int i = 0; i < weights.length; i++)
+//				{
+//					for (int j = 0; j < weights[i].length; j++) 
+//					{
+//						// calculateNewWeight();
+//					}
+//				}
 				tIterations++;
 			}
 			epochs++;
@@ -239,23 +245,25 @@ public class ProgramFlow {
 		// evaluateAccuracy(testSet);
 	}
 
-	private double[][] rand()
-	{
-		double[][] weights = new double[hiddenLayers.length][];
-		for (int i = 0; i < weights.length; i++)
-		{
-			weights[i] = new double[hiddenLayers[i].length];
-			for (int j = 0; j < hiddenLayers[i].length; j++)
-			{
-				Random rand = new Random();
-				weights[i][j] = (epsilonRange * -1)	+ (epsilonRange - (epsilonRange * -1)) * rand.nextDouble();
-			}
-		}
-		return weights;
-	}
+//	private double[][] rand()
+//	{
+//		double[][] weights = new double[hiddenLayers.length][];
+//		for (int i = 0; i < weights.length; i++)
+//		{
+//			weights[i] = new double[hiddenLayers[i].length];
+//			for (int j = 0; j < hiddenLayers[i].length; j++)
+//			{
+//				Random rand = new Random();
+//				weights[i][j] = (epsilonRange * -1)	+ (epsilonRange - (epsilonRange * -1)) * rand.nextDouble();
+//			}
+//		}
+//		return weights;
+//	}
 
-	private void backpropUpdate(DataSetRow row, double[][] weights)
+	private void backpropUpdate(DataSetRow row)
 	{
+		this.inputLayer = getInputLayer(row);
+		
 		double[] layerOutputs = new double[hiddenLayers.length + 2]; 
 		double[] layerInputs = new double[hiddenLayers.length + 2];
 		
@@ -264,7 +272,7 @@ public class ProgramFlow {
 			layerOutputs[i] = row.getAttributeAt(i);
 		}
 		
-		for (double[] layer : hiddenLayers)
+		for (Layer layer : hiddenLayers)
 		{
 			double activation = 0;
 			for (int j = 0; j < weights.length; j++)
@@ -274,10 +282,10 @@ public class ProgramFlow {
 			}
 		}
 		double change = 0;
-		for (int j = 0; j < hiddenLayers[hiddenLayers.length -1].length; j++) 
-		{
-			change = activationFunction.ActivatePrime(layerInputs[j]);
-		}
+//		for (int j = 0; j < hiddenLayers[hiddenLayers.length -1].getNeurons(); j++) 
+//		{
+//			change = activationFunction.ActivatePrime(layerInputs[j]);
+//		}
 		
 	}
 	
@@ -289,6 +297,31 @@ public class ProgramFlow {
 			result += weights[i][j] * neuron;
 		}
 		return result;
+	}
+
+	private Layer getInputLayer(DataSetRow row)
+	{
+		Layer layer = new Layer(new LinkedList<Neuron>());
+		for(double attr : row.getAttributes())
+		{
+			Neuron neuron = new Neuron(attr, new LinkedList<Edge>(),  new LinkedList<Edge>());
+			List<Edge> out = new LinkedList<>();
+	
+			for(Neuron hiddenNeuron : hiddenLayers[0].getNeurons())
+			{
+				Edge edge = new Edge(neuron, hiddenNeuron, getRand());
+				out.add(edge);
+			}
+			neuron.setOutEdges(out);
+			layer.getNeurons().add(neuron);
+		}
+		return layer;
+	}
+	
+	private double getRand()
+	{
+		Random rand = new Random();
+		return (epsilonRange * -1)	+ (epsilonRange - (epsilonRange * -1)) * rand.nextDouble();
 	}
 	
 	private double calculateValidationError(double[] weights, List<DataSetRow> dataInFold)

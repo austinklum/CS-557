@@ -16,6 +16,10 @@ public class DataSetRow
 		this.setTargetLength(targetLength);
 	}
 
+	public Neuron getInputLayer()
+	{
+		Neuron neuron = new Neuron();
+	}
 
 	public Double[] getAttributes() 
 	{
