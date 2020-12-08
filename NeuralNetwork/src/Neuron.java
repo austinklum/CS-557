@@ -3,8 +3,8 @@ import java.util.List;
 
 public class Neuron 
 {
-	private double aj;
-	private double inj;
+	private double output;
+	private double input;
 	private double bias;
 	private List<WeightEdge> inEdges;
 	private List<WeightEdge> outEdges;
@@ -20,17 +20,17 @@ public class Neuron
 		this(new LinkedList<WeightEdge>(), new LinkedList<WeightEdge>());
 	}
 	
-	public double getAj() {
-		return aj;
+	public double getOutput() {
+		return output;
 	}
-	public void setAj(double aj) {
-		this.aj = aj;
+	public void setOutput(double output) {
+		this.output = output;
 	}
-	public double getInj() {
-		return inj;
+	public double getInput() {
+		return input;
 	}
-	public void setInj(double inj) {
-		this.inj = inj;
+	public void setInput(double input) {
+		this.input = input;
 	}
 	public List<WeightEdge> getInEdges() {
 		return inEdges;

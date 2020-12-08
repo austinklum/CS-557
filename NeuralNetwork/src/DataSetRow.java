@@ -19,24 +19,26 @@ public class DataSetRow
 		this.setTargetLength(targetLength);
 	}
 
-	private Layer getInputLayer()
-	{
-		Layer layer = new Layer(new LinkedList<Neuron>());
-		for(double attr : this.getAttributes())
-		{
-			Neuron neuron = new Neuron(attr, new LinkedList<WeightEdge>(),  new LinkedList<WeightEdge>());
-			List<WeightEdge> out = new LinkedList<>();
-	
-			for(Neuron hiddenNeuron : hiddenLayers[0].getNeurons())
-			{
-				WeightEdge edge = new WeightEdge(neuron, hiddenNeuron, getRand());
-				out.add(edge);
-			}
-			neuron.setOutEdges(out);
-			layer.getNeurons().add(neuron);
-		}
-		return layer;
-	}
+//	public Layer getInputLayer(Layer firstHiddenLayer)
+//	{
+//		Layer layer = new Layer(new LinkedList<Neuron>());
+//		layer.setupEmptyLayer(this.getAttributes().length);
+//		
+//		for(double attr : this.getAttributes())
+//		{
+//			Neuron neuron = new Neuron(attr, new LinkedList<WeightEdge>(),  new LinkedList<WeightEdge>());
+//			List<WeightEdge> out = new LinkedList<>();
+//	
+//			for(Neuron hiddenNeuron : hiddenLayers[0].getNeurons())
+//			{
+//				WeightEdge edge = new WeightEdge(neuron, hiddenNeuron, getRand());
+//				out.add(edge);
+//			}
+//			neuron.setOutEdges(out);
+//			layer.getNeurons().add(neuron);
+//		}
+//		return layer;
+//	}
 
 	public Double[] getAttributes() 
 	{

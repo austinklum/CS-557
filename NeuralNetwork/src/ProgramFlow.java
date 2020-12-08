@@ -216,12 +216,12 @@ public class ProgramFlow {
 	private void run()
 	{
 		//setup NN
+		setUpHiddenLayers();
 		//double[][] weights = rand();
 	
 		int tIterations = 0;
 		int epochs = 0;
 		double absoluteError = 1;
-		setUpHiddenLayers();
 		while(!stopConditionsMet(epochs, absoluteError))
 		{
 			List<List<DataSetRow>> batches = createMiniBatches(trainSet);
@@ -248,51 +248,25 @@ public class ProgramFlow {
 
 	private void setUpHiddenLayers()
 	{
+		for(Layer layer : hiddenLayers)
+		{
+			layer.setupEmptyLayer();
+		}
 		for (int i = 0; i < hiddenLayers.length - 1; i++) 
 		{
-			Layer layer = hiddenLayers[i];
-			layer.setupEmptyLayer();
-			for(Neuron neuron : layer.getNeurons())
-			{
-				Layer nextLayer = hiddenLayers[i+1]; 
-				for (Neuron nextNeuron : nextLayer.getNeurons()) 
-				{
-					WeightEdge edge = new WeightEdge(neuron, nextNeuron, getRand());
-					neuron.getOutEdges().add(edge);
-					nextNeuron.getInEdges().add(edge);
-				}
-			}
+			hiddenLayers[i].connectToLayer(hiddenLayers[i+1], randomWeightScalar());
 		}
 	}
 
-//	private double[][] rand()
-//	{
-//		double[][] weights = new double[hiddenLayers.length][];
-//		for (int i = 0; i < weights.length; i++)
-//		{
-//			weights[i] = new double[hiddenLayers[i].length];
-//			for (int j = 0; j < hiddenLayers[i].length; j++)
-//			{
-//				Random rand = new Random();
-//				weights[i][j] = (epsilonRange * -1)	+ (epsilonRange - (epsilonRange * -1)) * rand.nextDouble();
-//			}
-//		}
-//		return weights;
-//	}
 
 	private void backpropUpdate(DataSetRow row)
 	{
-		this.inputLayer = getInputLayer(row);
-		
-		for(int i = 0; i < row.getAttributes().length; i++)
-		{
-			layerOutputs[i] = row.getAttributeAt(i);
-		}
+		setupInputOutputLayers(row);
 		
 		for (Layer layer : hiddenLayers)
 		{
 			double activation = 0;
-			for (int j = 0; j < weights.length; j++)
+			for (Neuron neuron : layer.getNeurons())
 			{
 				layerInputs[j] = dotProduct(j, layerOutputs[j], weights);
 				layerOutputs[j] = activationFunction.Activate(layerInputs[j]);
@@ -305,7 +279,36 @@ public class ProgramFlow {
 //		}
 		
 	}
-	
+
+	private double randomWeightScalar()
+	{
+		return (epsilonRange * -1)	+ (epsilonRange - (epsilonRange * -1));
+	}
+	private void setupInputOutputLayers(DataSetRow row) 
+	{
+		outputLayer.setupEmptyLayer(row.getTargetLength());
+		inputLayer.setupEmptyLayer(row.getAttributes().length);
+		
+		Layer firstLayer;
+		if (hiddenLayers.length > 0)
+		{
+			firstLayer = hiddenLayers[0]; 
+			hiddenLayers[hiddenLayers.length - 1].connectToLayer(outputLayer, randomWeightScalar());
+		}
+		else
+		{
+			firstLayer = outputLayer;
+		}
+		
+		inputLayer.connectToLayer(firstLayer, randomWeightScalar());
+		
+		for(int i = 0; i < inputLayer.size; i++)
+		{
+			inputLayer.getNeuronAt(i).setOutput(row.getAttributeAt(i));
+		}
+		
+	}
+
 	private double dotProduct(int j, double neuron, double[][] weights)
 	{
 		double result = 0;
