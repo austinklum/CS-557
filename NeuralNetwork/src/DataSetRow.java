@@ -1,3 +1,6 @@
+import java.util.LinkedList;
+import java.util.List;
+
 /**
  * @author Austin Klum
  */
@@ -16,9 +19,23 @@ public class DataSetRow
 		this.setTargetLength(targetLength);
 	}
 
-	public Neuron getInputLayer()
+	private Layer getInputLayer()
 	{
-		Neuron neuron = new Neuron();
+		Layer layer = new Layer(new LinkedList<Neuron>());
+		for(double attr : this.getAttributes())
+		{
+			Neuron neuron = new Neuron(attr, new LinkedList<WeightEdge>(),  new LinkedList<WeightEdge>());
+			List<WeightEdge> out = new LinkedList<>();
+	
+			for(Neuron hiddenNeuron : hiddenLayers[0].getNeurons())
+			{
+				WeightEdge edge = new WeightEdge(neuron, hiddenNeuron, getRand());
+				out.add(edge);
+			}
+			neuron.setOutEdges(out);
+			layer.getNeurons().add(neuron);
+		}
+		return layer;
 	}
 
 	public Double[] getAttributes() 

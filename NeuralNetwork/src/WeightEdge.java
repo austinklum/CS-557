@@ -1,11 +1,11 @@
 
-public class Edge 
+public class WeightEdge 
 {
 	private double weight;
 	private Neuron start;
 	private Neuron end;
 	
-	public Edge(Neuron start, Neuron end, double weight)
+	public WeightEdge(Neuron start, Neuron end, double weight)
 	{
 		setStart(start);
 		setEnd(end);

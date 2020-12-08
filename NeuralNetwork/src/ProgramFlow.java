@@ -75,7 +75,7 @@ public class ProgramFlow {
 					
 					for (int j = 0; j < size; j++)
 					{
-						//this.hiddenLayers[j] = new Layer[Integer.parseInt(args[++i])];
+						this.hiddenLayers[j].size = Integer.parseInt(args[++i]);
 					}
 					break;
 				case "-l":
@@ -217,10 +217,11 @@ public class ProgramFlow {
 	{
 		//setup NN
 		//double[][] weights = rand();
+	
 		int tIterations = 0;
 		int epochs = 0;
 		double absoluteError = 1;
-		
+		setUpHiddenLayers();
 		while(!stopConditionsMet(epochs, absoluteError))
 		{
 			List<List<DataSetRow>> batches = createMiniBatches(trainSet);
@@ -245,6 +246,25 @@ public class ProgramFlow {
 		// evaluateAccuracy(testSet);
 	}
 
+	private void setUpHiddenLayers()
+	{
+		for (int i = 0; i < hiddenLayers.length - 1; i++) 
+		{
+			Layer layer = hiddenLayers[i];
+			layer.setupEmptyLayer();
+			for(Neuron neuron : layer.getNeurons())
+			{
+				Layer nextLayer = hiddenLayers[i+1]; 
+				for (Neuron nextNeuron : nextLayer.getNeurons()) 
+				{
+					WeightEdge edge = new WeightEdge(neuron, nextNeuron, getRand());
+					neuron.getOutEdges().add(edge);
+					nextNeuron.getInEdges().add(edge);
+				}
+			}
+		}
+	}
+
 //	private double[][] rand()
 //	{
 //		double[][] weights = new double[hiddenLayers.length][];
@@ -263,9 +283,6 @@ public class ProgramFlow {
 	private void backpropUpdate(DataSetRow row)
 	{
 		this.inputLayer = getInputLayer(row);
-		
-		double[] layerOutputs = new double[hiddenLayers.length + 2]; 
-		double[] layerInputs = new double[hiddenLayers.length + 2];
 		
 		for(int i = 0; i < row.getAttributes().length; i++)
 		{
@@ -299,24 +316,7 @@ public class ProgramFlow {
 		return result;
 	}
 
-	private Layer getInputLayer(DataSetRow row)
-	{
-		Layer layer = new Layer(new LinkedList<Neuron>());
-		for(double attr : row.getAttributes())
-		{
-			Neuron neuron = new Neuron(attr, new LinkedList<Edge>(),  new LinkedList<Edge>());
-			List<Edge> out = new LinkedList<>();
-	
-			for(Neuron hiddenNeuron : hiddenLayers[0].getNeurons())
-			{
-				Edge edge = new Edge(neuron, hiddenNeuron, getRand());
-				out.add(edge);
-			}
-			neuron.setOutEdges(out);
-			layer.getNeurons().add(neuron);
-		}
-		return layer;
-	}
+
 	
 	private double getRand()
 	{

@@ -1,35 +1,47 @@
+import java.util.LinkedList;
 import java.util.List;
 
 public class Neuron 
 {
-	private double value;
+	private double aj;
+	private double inj;
 	private double bias;
-	private List<Edge> inEdges;
-	private List<Edge> outEdges;
+	private List<WeightEdge> inEdges;
+	private List<WeightEdge> outEdges;
 	
-	public Neuron(double value, List<Edge> inEdges, List<Edge> outEdges)
+	public Neuron(List<WeightEdge> inEdges, List<WeightEdge> outEdges)
 	{
-		setValue(value);
 		setInEdges(inEdges);
 		setOutEdges(outEdges);
 	}
 	
-	public double getValue() {
-		return value;
+	public Neuron()
+	{
+		this(new LinkedList<WeightEdge>(), new LinkedList<WeightEdge>());
 	}
-	public void setValue(double value) {
-		this.value = value;
+	
+	public double getAj() {
+		return aj;
 	}
-	public List<Edge> getInEdges() {
+	public void setAj(double aj) {
+		this.aj = aj;
+	}
+	public double getInj() {
+		return inj;
+	}
+	public void setInj(double inj) {
+		this.inj = inj;
+	}
+	public List<WeightEdge> getInEdges() {
 		return inEdges;
 	}
-	public void setInEdges(List<Edge> inEdges) {
+	public void setInEdges(List<WeightEdge> inEdges) {
 		this.inEdges = inEdges;
 	}
-	public List<Edge> getOutEdges() {
+	public List<WeightEdge> getOutEdges() {
 		return outEdges;
 	}
-	public void setOutEdges(List<Edge> outEdges) {
+	public void setOutEdges(List<WeightEdge> outEdges) {
 		this.outEdges = outEdges;
 	}
 	
