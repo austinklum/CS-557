@@ -261,29 +261,44 @@ public class ProgramFlow {
 
 	private void backpropUpdate(DataSetRow row)
 	{
+		forwardProp(row);
+		
+		int i = 0;
+		for(Neuron neuron : outputLayer.getNeurons())
+		{
+			double actualOutput = (i == row.getTarget()) ? 1 : 0;
+			neuron.updateOutputLayerDelta(actualOutput);
+			i++;
+		}
+		
+		for (int l = hiddenLayers.length; l > 0; l++)
+		{
+			for (Neuron neuron : hiddenLayers[l].getNeurons())
+			{
+				double delta = 0;
+			}
+		}
+		
+	}
+
+	private void forwardProp(DataSetRow row) {
 		setupInputOutputLayers(row);
 		
 		for (Layer layer : hiddenLayers)
 		{
-			double activation = 0;
 			for (Neuron neuron : layer.getNeurons())
 			{
 				neuron.updateInput();
 				neuron.activate();
 			}
 		}
-		double change = 0;
-//		for (int j = 0; j < hiddenLayers[hiddenLayers.length -1].getNeurons(); j++) 
-//		{
-//			change = activationFunction.ActivatePrime(layerInputs[j]);
-//		}
-		
 	}
 
 	private double randomWeightScalar()
 	{
 		return (epsilonRange * -1)	+ (epsilonRange - (epsilonRange * -1));
 	}
+	
 	private void setupInputOutputLayers(DataSetRow row) 
 	{
 		outputLayer.setupEmptyLayer(row.getTargetLength());

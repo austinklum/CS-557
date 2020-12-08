@@ -37,6 +37,13 @@ public class Neuron
 		output = activationFunction.Activate(input);
 	}
 	
+	public void updateOutputLayerDelta(double actualOutput)
+	{
+		double activationPrime = activationFunction.ActivatePrime(input);
+		double outputDifference = actualOutput - output;
+		setDelta(activationPrime * (-2 * outputDifference));
+	}
+	
 	public double getOutput() {
 		return output;
 	}
@@ -60,6 +67,14 @@ public class Neuron
 	}
 	public void setOutEdges(List<WeightEdge> outEdges) {
 		this.outEdges = outEdges;
+	}
+
+	public double getDelta() {
+		return delta;
+	}
+
+	public void setDelta(double delta) {
+		this.delta = delta;
 	}
 	
 	
