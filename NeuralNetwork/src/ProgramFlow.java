@@ -275,7 +275,7 @@ public class ProgramFlow {
 		{
 			for (Neuron neuron : hiddenLayers[l].getNeurons())
 			{
-				double delta = 0;
+				neuron.updateDelta();
 			}
 		}
 		

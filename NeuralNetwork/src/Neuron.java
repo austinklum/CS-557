@@ -44,6 +44,19 @@ public class Neuron
 		setDelta(activationPrime * (-2 * outputDifference));
 	}
 	
+	public void updateDelta()
+	{
+		double activationPrime = activationFunction.ActivatePrime(input);
+		double sum = 0;
+		
+		for (WeightEdge edge : outEdges)
+		{
+			sum += edge.getWeight() * edge.getEnd().delta;
+		}
+		double newDelta = activationPrime * sum;
+		setDelta(newDelta);
+	}
+	
 	public double getOutput() {
 		return output;
 	}
