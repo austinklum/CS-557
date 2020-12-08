@@ -5,6 +5,7 @@ public class Neuron
 {
 	private double output;
 	private double input;
+	private double delta;
 	private double bias;
 	private List<WeightEdge> inEdges;
 	private List<WeightEdge> outEdges;
