@@ -268,8 +268,8 @@ public class ProgramFlow {
 			double activation = 0;
 			for (Neuron neuron : layer.getNeurons())
 			{
-				layerInputs[j] = dotProduct(j, layerOutputs[j], weights);
-				layerOutputs[j] = activationFunction.Activate(layerInputs[j]);
+				neuron.updateInput();
+				neuron.activate();
 			}
 		}
 		double change = 0;
@@ -309,15 +309,15 @@ public class ProgramFlow {
 		
 	}
 
-	private double dotProduct(int j, double neuron, double[][] weights)
-	{
-		double result = 0;
-		for (int i = 0; i < weights.length; i++)
-		{
-			result += weights[i][j] * neuron;
-		}
-		return result;
-	}
+//	private double dotProduct(Neuron neuron, double[][] weights)
+//	{
+//		double result = 0;
+//		for (int i = 0; i < weights.length; i++)
+//		{
+//			result += weights[i][j] * neuron;
+//		}
+//		return result;
+//	}
 
 
 	
