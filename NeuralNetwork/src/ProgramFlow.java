@@ -231,13 +231,7 @@ public class ProgramFlow {
 				{
 					backpropUpdate(row);
 				}
-//				for (int i = 0; i < weights.length; i++)
-//				{
-//					for (int j = 0; j < weights[i].length; j++) 
-//					{
-//						// calculateNewWeight();
-//					}
-//				}
+				updateWeights(batch.size());
 				tIterations++;
 			}
 			epochs++;
@@ -262,7 +256,10 @@ public class ProgramFlow {
 	private void backpropUpdate(DataSetRow row)
 	{
 		forwardProp(row);
-		
+		backProp(row);
+	}
+
+	private void backProp(DataSetRow row) {
 		int i = 0;
 		for(Neuron neuron : outputLayer.getNeurons())
 		{
@@ -271,14 +268,13 @@ public class ProgramFlow {
 			i++;
 		}
 		
-		for (int l = hiddenLayers.length; l > 0; l++)
+		for (int l = hiddenLayers.length; l > 1; l++)
 		{
 			for (Neuron neuron : hiddenLayers[l].getNeurons())
 			{
 				neuron.updateDelta();
 			}
 		}
-		
 	}
 
 	private void forwardProp(DataSetRow row) {
@@ -294,6 +290,18 @@ public class ProgramFlow {
 		}
 	}
 
+	private void updateWeights(int batchSize)
+	{
+		double sum = 0;
+		for (int l = 0; l < hiddenLayers.length + 1; l++)
+		{
+			for (Neuron neuron : hiddenLayers[l].getNeurons())
+			{
+				neuron.getDelta() * neuron.getInEdges().get(0).getStart();
+			}
+		}
+	}
+	
 	private double randomWeightScalar()
 	{
 		return (epsilonRange * -1)	+ (epsilonRange - (epsilonRange * -1));
