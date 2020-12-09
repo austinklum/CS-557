@@ -5,6 +5,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -231,6 +232,7 @@ public class ProgramFlow {
 				{
 					backpropUpdate(row);
 				}
+				updateInputLayerWeights(batch.size());
 				updateWeights(batch.size());
 				tIterations++;
 			}
@@ -292,15 +294,51 @@ public class ProgramFlow {
 
 	private void updateWeights(int batchSize)
 	{
-		double sum = 0;
-		for (int l = 0; l < hiddenLayers.length + 1; l++)
+		for (int l = 0; l < hiddenLayers.length; l++)
 		{
 			for (Neuron neuron : hiddenLayers[l].getNeurons())
 			{
-				neuron.getDelta() * neuron.getInEdges().get(0).getStart();
+				List<Double> deltas = neuron.getDeltas();
+			
+				for(WeightEdge edge : neuron.getOutEdges())
+				{
+					List<Double> ais = edge.getEnd().getOutputs();
+					double sum = 0;
+					for (int n = 0; n < batchSize; n++)
+					{
+						sum += deltas.get(n) * ais.get(n);
+					}
+					double avgSum = sum / batchSize;
+					double jw = avgSum + 2 * this.regularization * edge.getWeight();
+					double newWeight = edge.getWeight() - this.learningRate * jw;
+					edge.setWeight(newWeight);
+				}
 			}
 		}
 	}
+	
+	private void updateInputLayerWeights(int batchSize)
+	{
+		for (Neuron neuron : inputLayer.getNeurons())
+		{
+			List<Double> deltas = neuron.getDeltas();
+		
+			for(WeightEdge edge : neuron.getOutEdges())
+			{
+				List<Double> ais = edge.getEnd().getOutputs();
+				double sum = 0;
+				for (int n = 0; n < batchSize; n++)
+				{
+					sum += deltas.get(n) * ais.get(n);
+				}
+				double avgSum = sum / batchSize;
+				double jw = avgSum + 2 * this.regularization * edge.getWeight();
+				double newWeight = edge.getWeight() - this.learningRate * jw;
+				edge.setWeight(newWeight);
+			}
+		}
+	}
+	
 	
 	private double randomWeightScalar()
 	{

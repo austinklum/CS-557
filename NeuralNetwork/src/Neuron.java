@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,12 +10,16 @@ public class Neuron
 	private double bias;
 	private List<WeightEdge> inEdges;
 	private List<WeightEdge> outEdges;
+	private List<Double> deltas;
+	private List<Double> outputs;
 	private ActivationFunction activationFunction = new SigmoidActivation();
 	
 	public Neuron(List<WeightEdge> inEdges, List<WeightEdge> outEdges)
 	{
 		setInEdges(inEdges);
 		setOutEdges(outEdges);
+		deltas = new ArrayList<>();
+		outputs = new ArrayList<>();
 	}
 	
 	public Neuron()
@@ -61,6 +66,7 @@ public class Neuron
 		return output;
 	}
 	public void setOutput(double output) {
+		outputs.add(output);
 		this.output = output;
 	}
 	public double getInput() {
@@ -87,9 +93,17 @@ public class Neuron
 	}
 
 	public void setDelta(double delta) {
+		deltas.add(delta);
 		this.delta = delta;
 	}
 	
+	public List<Double> getDeltas()
+	{
+		return deltas;
+	}
 	
-	
+	public List<Double> getOutputs()
+	{
+		return outputs;
+	}
 }
