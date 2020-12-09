@@ -102,8 +102,18 @@ public class Neuron
 		return deltas;
 	}
 	
+	public void setDeltas(List<Double> deltas)
+	{
+		this.deltas = deltas;
+	}
+	
 	public List<Double> getOutputs()
 	{
 		return outputs;
+	}
+	
+	public void setOutputs(List<Double> outputs)
+	{
+		this.outputs = outputs;
 	}
 }

@@ -4,6 +4,7 @@
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -228,6 +229,7 @@ public class ProgramFlow {
 			List<List<DataSetRow>> batches = createMiniBatches(trainSet);
 			for(List<DataSetRow> batch : batches)
 			{
+				resetNeurons();
 				for (DataSetRow row : batch)
 				{
 					backpropUpdate(row);
@@ -254,6 +256,27 @@ public class ProgramFlow {
 		}
 	}
 
+	private void resetNeurons()
+	{
+		resetNeuronsInLayer(inputLayer);
+		for(Layer layer : hiddenLayers)
+		{
+			resetNeuronsInLayer(layer);
+		}
+		resetNeuronsInLayer(outputLayer);
+	}
+	
+	private void resetNeuronsInLayer(Layer layer)
+	{
+		for(Neuron neuron : layer.getNeurons())
+		{
+			neuron.setDeltas(new ArrayList<>());
+			neuron.setOutputs(new ArrayList<>());
+			neuron.setDelta(0);
+			neuron.setInput(0);
+			neuron.setOutput(0);
+		}
+	}
 
 	private void backpropUpdate(DataSetRow row)
 	{
