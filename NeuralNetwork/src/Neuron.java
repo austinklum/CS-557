@@ -39,7 +39,7 @@ public class Neuron
 	
 	public void activate()
 	{
-		output = activationFunction.Activate(input);
+		setOutput(activationFunction.Activate(input));
 	}
 	
 	public void updateOutputLayerDelta(double actualOutput)

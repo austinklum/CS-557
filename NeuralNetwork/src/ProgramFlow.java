@@ -151,9 +151,9 @@ public class ProgramFlow {
 			{
 				continue;
 			}
-			String[] lineArr = scan.nextLine().split(") (");
-			String[] attrString = lineArr[0].replaceAll("(", "").split(" ");
-			String[] targetString = lineArr[1].replaceAll(")", "").split(" ");
+			String[] lineArr = line.split("\\) \\(");
+			String[] attrString = lineArr[0].replace("(", "").split(" ");
+			String[] targetString = lineArr[1].replace(")", "").split(" ");
 			
 			Double[] attr = Stream.of(attrString).map(Double::valueOf).collect(Collectors.toList()).toArray(new Double[attrString.length]);
 			int targetPos = 0;
@@ -222,7 +222,7 @@ public class ProgramFlow {
 		//double[][] weights = rand();
 	
 		int tIterations = 0;
-		int epochs = 0;
+		int epochs = 999;
 		double absoluteError = 1;
 		while(!stopConditionsMet(epochs, absoluteError))
 		{
@@ -234,8 +234,8 @@ public class ProgramFlow {
 				{
 					backpropUpdate(row);
 				}
-				updateInputLayerWeights(batch.size());
 				updateWeights(batch.size());
+				updateOutputLayerWeights(batch.size());
 				tIterations++;
 			}
 			epochs++;
@@ -293,7 +293,7 @@ public class ProgramFlow {
 			i++;
 		}
 		
-		for (int l = hiddenLayers.length; l > 1; l++)
+		for (int l = hiddenLayers.length; l > 1; l--)
 		{
 			for (Neuron neuron : hiddenLayers[l].getNeurons())
 			{
@@ -312,6 +312,12 @@ public class ProgramFlow {
 				neuron.updateInput();
 				neuron.activate();
 			}
+		}
+		
+		for (Neuron neuron : outputLayer.getNeurons())
+		{
+			neuron.updateInput();
+			neuron.activate();
 		}
 	}
 
@@ -340,9 +346,9 @@ public class ProgramFlow {
 		}
 	}
 	
-	private void updateInputLayerWeights(int batchSize)
+	private void updateOutputLayerWeights(int batchSize)
 	{
-		for (Neuron neuron : inputLayer.getNeurons())
+		for (Neuron neuron : outputLayer.getNeurons())
 		{
 			List<Double> deltas = neuron.getDeltas();
 		
