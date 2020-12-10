@@ -143,6 +143,7 @@ public class ProgramFlow {
 	
 	private void readFile(Scanner scan)
 	{
+		print(1, "* Reading "  + fileName + "...\n");
 		int pos = 0;
 		while(scan.hasNext())
 		{
@@ -169,6 +170,7 @@ public class ProgramFlow {
 	
 	private void featureScaling(List<DataSetRow> data)
 	{
+		print(1, "* Scaling features...\n");
 		int numberOfFeatures = data.get(0).getAttributes().length;
 		for (int i = 0; i < numberOfFeatures; i++)
 		{
@@ -209,6 +211,7 @@ public class ProgramFlow {
 	
 	private void splitDataIntoSets()
 	{
+		print(1, "* Doing train/test split...\n");
 		Collections.shuffle(data);
 		int count = (int) (data.size() * .8);
 		trainSet = data.subList(0, count);
@@ -221,6 +224,7 @@ public class ProgramFlow {
 		setUpHiddenLayers();
 		//double[][] weights = rand();
 	
+		print(1, "* Beginning evaluation...");
 		int tIterations = 0;
 		int epochs = 999;
 		double absoluteError = 1;
