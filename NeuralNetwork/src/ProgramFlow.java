@@ -523,7 +523,7 @@ public class ProgramFlow {
 		{
 			return;
 		}
-		System.out.printf("        Epoch %6d (iter %6d):", epochCount, tIterations);
+		System.out.printf("        Epoch %6d (iter %6d):\n", epochCount, tIterations);
 		
 	}
 	
