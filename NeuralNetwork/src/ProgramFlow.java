@@ -223,7 +223,6 @@ public class ProgramFlow {
 	{
 		//setup NN
 		setUpHiddenLayers();
-		//double[][] weights = rand();
 	
 		print(1, "* Beginning evaluation...\n");
 		int tIterations = 0;
@@ -273,32 +272,13 @@ public class ProgramFlow {
 	{
 		double result = 0;
 		double correct = 1;
-		double wrong = 1;
 		for (DataSetRow row : rows)
 		{
 			forwardProp(row);
-			int i = 0;
 			if( row.getTarget() == outputLayer.getPositionOfClassification())
 			{
 				correct++;
 			}
-			else
-			{
-				wrong++;
-			}
-//			for(Neuron neuron : outputLayer.getNeurons())
-//			{
-//				double actualOutput = (i == row.getTarget()) ? 1 : 0;
-//				if (neuron.getOutput() == actualOutput)
-//				{
-//					correct++;
-//				}
-//				else
-//				{
-//					wrong++;
-//				}
-//				i++;
-//			}
 		}
 		result = correct / (rows.size() + 1);
 		return result;
@@ -461,36 +441,10 @@ public class ProgramFlow {
 		
 	}
 
-//	private double dotProduct(Neuron neuron, double[][] weights)
-//	{
-//		double result = 0;
-//		for (int i = 0; i < weights.length; i++)
-//		{
-//			result += weights[i][j] * neuron;
-//		}
-//		return result;
-//	}
-
-
-	
 	private double getRand()
 	{
 		Random rand = new Random();
 		return (epsilonRange * -1)	+ (epsilonRange - (epsilonRange * -1)) * rand.nextDouble();
-	}
-	
-	private double calculateValidationError(double[] weights, List<DataSetRow> dataInFold)
-	{
-		double error = 0; 
-		for (DataSetRow row : dataInFold)
-		{
-			double predictionY = predictY(weights, row);
-			double YDifference = row.getTarget() - predictionY;
-
-			error += Math.pow(YDifference, 2);
-		}
-		double errorNormalized = error / dataInFold.size();
-		return errorNormalized;
 	}
 
 	private List<List<DataSetRow>> createMiniBatches(List<DataSetRow> fullSet) {
@@ -540,84 +494,7 @@ public class ProgramFlow {
 		}
 		return stopConditionsMet;
 	}
-	
-	private double calculateGradient(List<DataSetRow> batch, double[] weights, int k)
-	{
-		double unnormalizedGradient = 0;
-		for (DataSetRow row : batch)
-		{
-			double scalar = -2 * row.getAttributeAt(k);
-			double cost = cost(weights, row);
-			//costBookKeeping(cost);
-			unnormalizedGradient += scalar * cost;
-		}
-		double normalizedGradient = unnormalizedGradient / batch.size();
-		return normalizedGradient;
-	}
 
-//	private void costBookKeeping(double cost) 
-//	{
-//		double costSquared = Math.pow(cost, 2);
-//		if (isFirstIter) 
-//		{
-//			isFirstIter = false;
-//			this.costChange = costSquared;
-//			this.cost = costSquared;
-//		}
-//		else
-//		{
-//			this.costChange = this.cost - costSquared; // eww... This is shoe horned in
-//			this.cost = costSquared; // these definitely shouldn't be globals..
-//		}
-//	}
-
-	private double l2Loss(double[] weights, DataSetRow row)
-	{
-		return Math.pow(cost(weights, row), 2);
-	}
-	
-	private double costBatch(double[] weights, List<DataSetRow> batch)
-	{
-		double sum = 0;
-		for(DataSetRow row : batch)
-		{
-			sum += Math.pow(cost(weights, row), 2);
-		}
-		double sumAvg = sum / batch.size();
-		return sumAvg;
-	}
-	
-	private double costBatches(double[] weights, List<List<DataSetRow>> batches)
-	{
-		double sum = 0;
-		int size = 0;
-		for(List<DataSetRow> batch : batches) 
-		{
-			for(DataSetRow row : batch)
-			{
-				sum += Math.pow(cost(weights, row), 2);
-			}
-			size += batch.size();
-		}
-		double sumAvg = sum / size;
-		return sumAvg;
-	}
-	
-	private double cost(double[] weights, DataSetRow row) {
-		double predictionY = predictY(weights, row);
-		double targetMinusSum = row.getTarget() - predictionY;
-		return targetMinusSum;
-	}
-
-	private double predictY(double[] weights, DataSetRow row) {
-		double predictedY = 0;
-		for (int j = 0; j < weights.length; j++)
-		{
-			predictedY += weights[j] * row.getAttributeAt(j);
-		}
-		return predictedY;
-	}
-	
 	private void print(int verbosity, String message)
 	{
 		if (verbosity <= verbosityLevel)
@@ -625,57 +502,7 @@ public class ProgramFlow {
 			System.out.print(message);
 		}
 	}
-	
-	private void printWhen(int verbosity, String message)
-	{
-		if (verbosity == verbosityLevel)
-		{
-			System.out.print(message);
-		}
-	}
-	
-	private void printError(String fold, double trainMSE, double validMSE)
-	{
-		if (verbosityLevel == 2)
-		{
-			System.out.printf("  %s\t\t%.6f\t%,6f\n", fold, trainMSE, validMSE);
-		}
-		if (verbosityLevel > 2)
-		{
-			System.out.printf("     CurFoldTrainErr:     %.6f\n", trainMSE);
-			System.out.printf("     CurFoldValidErr:     %.6f\n\n", validMSE);
-		}
-	}
-	
-	private void printAvgError(int degree, double trainMSESum, double validMSESum)
-	{
-		double trainMSE = trainMSESum / 1;//kFolds;
-		double validMSE = validMSESum / 1;//kFolds;
-		String avgLabel = "Avg:";
-		
-		if (verbosityLevel == 1)
-		{
-			avgLabel = Integer.toString(degree);
-		}
-		if (verbosityLevel <= 2)
-		{
-			System.out.printf("%6s\t\t%.6f\t%,6f\n", avgLabel, trainMSE, validMSE);
-		}
-		if (verbosityLevel > 2)
-		{
-			System.out.println("   * Averaging across the folds");
-			System.out.printf("     AvgFoldTrainError:   %.6f\n", trainMSE);
-			System.out.printf("     AvgFoldValidError:   %.6f\n", validMSE);
-		}
-	}
-	
-	private void printDegreeHeader(int d)
-	{
-		printWhen(2, "----------------------------------\n");
-		print(2, "* Testing degree " + d + "\n");
-		printWhen(2, "\t\tTrainMSE\tValidMSE\n");
-	}
-	
+
 	private void printLayers() 
 	{
 		if (verbosityLevel < 3)
@@ -689,25 +516,6 @@ public class ProgramFlow {
 		}
 	}
 	
-	private void printModel(double[] weights)
-	{
-		if (verbosityLevel < 3)
-		{
-			return;
-		}
-		System.out.print("     Model: Y = ");
-		System.out.printf("%.4f", weights[0]);
-		for (int i = 1; i < weights.length; i++)
-		{
-			int attrCount = 1;
-			while(attrCount <= this.hiddenLayers.length)
-			{
-				System.out.printf(" + %.4f X%d ^%d", weights[i], attrCount, i);
-				attrCount++;
-			}
-		}
-		System.out.println("");
-	}
 	
 	private void printEpochStats(int epochCount, int tIterations)
 	{

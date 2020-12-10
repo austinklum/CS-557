@@ -1,3 +1,6 @@
+/**
+ * @author Austin Klum
+ */
 
 public class WeightEdge 
 {
