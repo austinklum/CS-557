@@ -1,4 +1,4 @@
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -13,6 +13,10 @@ public class Layer
 		setNeurons(neurons);
 	}
 	
+	public Layer() {
+		
+	}
+
 	public List<Neuron> getNeurons() {
 		return neurons;
 	}
@@ -29,6 +33,7 @@ public class Layer
 	
 	public void setupEmptyLayer()
 	{
+		this.neurons = new ArrayList<Neuron>();
 		for (int i = 0; i < size; i++) 
 		{
 			neurons.add(new Neuron());
@@ -38,6 +43,23 @@ public class Layer
 	public Neuron getNeuronAt(int index)
 	{
 		return this.getNeurons().get(index);
+	}
+	
+	public int getPositionOfClassification()
+	{
+		int i = 0;
+		double maxOutput = 0;
+		int maxOutputPos = 0;
+		for(Neuron neuron : getNeurons())
+		{
+			if (neuron.getOutput() > maxOutput)
+			{
+				maxOutput = neuron.getOutput();
+				maxOutputPos = i;
+			}
+			i++;
+		}
+		return maxOutputPos;
 	}
 	
 	public void connectToLayer(Layer otherLayer, double randomWeightScalar)

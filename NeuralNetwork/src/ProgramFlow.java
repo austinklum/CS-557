@@ -77,6 +77,7 @@ public class ProgramFlow {
 					
 					for (int j = 0; j < size; j++)
 					{
+						this.hiddenLayers[j] = new Layer();
 						this.hiddenLayers[j].size = Integer.parseInt(args[++i]);
 					}
 					break;
@@ -224,10 +225,20 @@ public class ProgramFlow {
 		setUpHiddenLayers();
 		//double[][] weights = rand();
 	
-		print(1, "* Beginning evaluation...");
+		print(1, "* Beginning evaluation...\n");
 		int tIterations = 0;
-		int epochs = 999;
+		int epochs = 0;
 		double absoluteError = 1;
+		print(2, "   * Training with training data...\n");
+		print(3, "     * Layer Sizes:\n");
+		printLayers();
+		print(3, "     * Beginning mini-batch gradient descent\n");
+		print(3, "       (batchSize=" + batchSize + ", epochLimit=" + epochLimit +", learningRate=" + learningRate + ", lambda=" + regularization + "\n");
+		if (epochs % 1000 == 0)
+		{
+			printEpochStats(epochs, tIterations);
+		}
+		long startTime = System.currentTimeMillis();
 		while(!stopConditionsMet(epochs, absoluteError))
 		{
 			List<List<DataSetRow>> batches = createMiniBatches(trainSet);
@@ -236,6 +247,7 @@ public class ProgramFlow {
 				resetNeurons();
 				for (DataSetRow row : batch)
 				{
+					//System.out.println("Row " + i++ + " of " + batch.size());
 					backpropUpdate(row);
 				}
 				updateWeights(batch.size());
@@ -244,10 +256,54 @@ public class ProgramFlow {
 			}
 			epochs++;
 		}
-		// trainNetwork(trainSet);
-		// evaluateAccuracy(testSet);
+		long endTime = System.currentTimeMillis();
+		long time = endTime - startTime;
+		print(3, "     * Done with fitting!\n");
+		print(3, "Training took " + time + "ms, " + epochs + " epochs, " + tIterations  + " iterations (" + (double) time/tIterations + " / iteration)\n" );
+		printEpochStats(epochs, tIterations);
+		double trainAccuracy = evaluateAccuracy(trainSet);
+		print(2, "   * Evaluating accuracy on the test data...");
+		double testAccuracy = evaluateAccuracy(testSet);
+		print(1, "* Results:\n");
+		System.out.printf("   TrainAcc: %1.6f\n", trainAccuracy);
+		System.out.printf("   TestAcc:  %1.6f\n", testAccuracy);
 	}
 
+	private double evaluateAccuracy(List<DataSetRow> rows)
+	{
+		double result = 0;
+		double correct = 1;
+		double wrong = 1;
+		for (DataSetRow row : rows)
+		{
+			forwardProp(row);
+			int i = 0;
+			if( row.getTarget() == outputLayer.getPositionOfClassification())
+			{
+				correct++;
+			}
+			else
+			{
+				wrong++;
+			}
+//			for(Neuron neuron : outputLayer.getNeurons())
+//			{
+//				double actualOutput = (i == row.getTarget()) ? 1 : 0;
+//				if (neuron.getOutput() == actualOutput)
+//				{
+//					correct++;
+//				}
+//				else
+//				{
+//					wrong++;
+//				}
+//				i++;
+//			}
+		}
+		result = correct / (rows.size() + 1);
+		return result;
+	}
+	
 	private void setUpHiddenLayers()
 	{
 		for(Layer layer : hiddenLayers)
@@ -263,11 +319,13 @@ public class ProgramFlow {
 	private void resetNeurons()
 	{
 		resetNeuronsInLayer(inputLayer);
+		inputLayer.setNeurons(new ArrayList<Neuron>());
 		for(Layer layer : hiddenLayers)
 		{
 			resetNeuronsInLayer(layer);
 		}
 		resetNeuronsInLayer(outputLayer);
+		outputLayer.setNeurons(new ArrayList<Neuron>());
 	}
 	
 	private void resetNeuronsInLayer(Layer layer)
@@ -297,7 +355,7 @@ public class ProgramFlow {
 			i++;
 		}
 		
-		for (int l = hiddenLayers.length; l > 1; l--)
+		for (int l = hiddenLayers.length - 1; l > 0; l--)
 		{
 			for (Neuron neuron : hiddenLayers[l].getNeurons())
 			{
@@ -433,59 +491,6 @@ public class ProgramFlow {
 		}
 		double errorNormalized = error / dataInFold.size();
 		return errorNormalized;
-	}
-	
-	private double[] miniBatchGradientDescent(int degree, List<DataSetRow> dataNotInFold)
-	{
-		int weightsLength = 1; //+ (degree * this.hiddenLayers.size());
-		double[] weights = new double[weightsLength];
-		int tIterations = 0;
-		int epochCount = 0;
-		double costChange = 0;
-		double cost = 0;
-		print(4, "       * Beginning mini-batch gradient descent\n");
-		print(4, "         (alpha=" + learningRate + ", epochLimit=" + epochLimit + ", batchSize=" + batchSize + ")\n");
-		long startTime = System.currentTimeMillis();
-		//while(!stopConditionsMet(epochCount, cost, costChange))
-		while(epochCount != epochLimit)
-		{
-			List<List<DataSetRow>> batches = new LinkedList<>();//createMiniBatches(dataNotInFold, weightsLength);
-			double costBatch = costBatches(weights, batches);  
-			costChange = Math.abs(cost - costBatch);
-			//System.out.println("Cost: " + cost + " CostBatch: " + costBatch + " CostChange: " + costChange);
-			cost = costBatch;
-			if (epochCount % 1000 == 0)
-			{
-				printEpochStats(epochCount, tIterations, weights);
-			}
-			for(List<DataSetRow> batch : batches)
-			{
-				
-				for(int k = 0; k < weightsLength; k++)
-				{
-					weights[k] = calculateNewWeight(weights, batch, k);
-				}
-				
-				tIterations++;
-			}
-			epochCount++;
-		}
-		long endTime = System.currentTimeMillis();
-		printEpochStats(epochCount, tIterations, weights);
-		print(4, "      * Done with fitting!\n");
-		long trainTime = endTime - startTime;
-		double timePerIteration = (double) tIterations / trainTime;
-		print(3, "     Training took " + trainTime + "ms, " + epochCount + " epochs, " + tIterations + " iterations (" + timePerIteration + "ms / iteration)\n");
-		
-		return weights;
-	}
-
-	private double calculateNewWeight(double[] weights, List<DataSetRow> batch, int k) 
-	{
-		double gradient = calculateGradient(batch, weights, k);
-		double gradDesc = learningRate * gradient;
-		double newWeight = weights[k] - gradDesc;
-		return newWeight;
 	}
 
 	private List<List<DataSetRow>> createMiniBatches(List<DataSetRow> fullSet) {
@@ -671,6 +676,19 @@ public class ProgramFlow {
 		printWhen(2, "\t\tTrainMSE\tValidMSE\n");
 	}
 	
+	private void printLayers() 
+	{
+		if (verbosityLevel < 3)
+		{
+			return;
+		}
+		int i = 1;
+		for(Layer layer : hiddenLayers)
+		{
+			System.out.println("     * Layer: " + i++ + "\t" + layer.size);
+		}
+	}
+	
 	private void printModel(double[] weights)
 	{
 		if (verbosityLevel < 3)
@@ -691,21 +709,14 @@ public class ProgramFlow {
 		System.out.println("");
 	}
 	
-	private void printEpochStats(int epochCount, int tIterations, double[] weights)
+	private void printEpochStats(int epochCount, int tIterations)
 	{
 		if (verbosityLevel < 4)
 		{
 			return;
 		}
-		//System.out.printf("         Epoch %6d (iter %6d): Cost = %.9f;", epochCount, tIterations, cost);
-		if (verbosityLevel == 5)
-		{
-			printModel(weights);
-		}
-		else
-		{
-			System.out.println("");
-		}
+		System.out.printf("        Epoch %6d (iter %6d):", epochCount, tIterations);
+		
 	}
 	
 }
