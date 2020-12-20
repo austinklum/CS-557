@@ -1,0 +1,1 @@
+I believe everything is working correctly, but it runs very slow. I wasn't able to try out all possible cases and tweak the parameters past a few runs. I learnt a lot from this assignment, and need to keep moving on to the next task. 
