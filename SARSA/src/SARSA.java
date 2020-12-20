@@ -1,3 +1,8 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class SARSA
 {
@@ -16,7 +21,7 @@ public class SARSA
 	{
 		setDefaults();
 		processCommandLineArgs(args);
-		//createDataSets();
+		loadFile();
 		//run();
 	}
 	
@@ -69,4 +74,56 @@ public class SARSA
 		}
 	}
 	
+	private void loadFile()
+	{
+		tryToReadFile();
+	}
+	
+	private void tryToReadFile()
+	{
+			Scanner scan;
+			try {
+				scan = new Scanner(new File(fileName));
+				readFile(scan);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+	}
+	
+	private void readFile(Scanner scan)
+	{
+		print(1, "* Reading "  + fileName + "...\n");
+		int pos = 0;
+		while(scan.hasNext())
+		{
+			String line = scan.nextLine();
+			if(line.startsWith("#") || line.isEmpty())
+			{
+				continue;
+			}
+			String[] lineArr = line.split("\\) \\(");
+			String[] attrString = lineArr[0].replace("(", "").split(" ");
+			String[] targetString = lineArr[1].replace(")", "").split(" ");
+			
+			Double[] attr = Stream.of(attrString).map(Double::valueOf).collect(Collectors.toList()).toArray(new Double[attrString.length]);
+			int targetPos = 0;
+			while(!targetString[targetPos].equals("1"))
+			{
+				targetPos++;
+			}
+			
+			data.add(new DataSetRow(pos, attr, targetPos, targetString.length));
+			pos++;
+		}
+	}
+	
+	
+	private void print(int verbosity, String message)
+	{
+		if (verbosity <= verbosityLevel)
+		{
+			System.out.print(message);
+		}
+	}
 }
