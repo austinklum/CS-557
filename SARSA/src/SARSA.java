@@ -16,12 +16,13 @@ public class SARSA
 	private boolean useUnicodeCharacters;
 	private int verbosityLevel;
 	
+	private Board board;
+	
 	public SARSA(String[] args)
 	{
 		setDefaults();
 		processCommandLineArgs(args);
-		loadFile();
-		//run();
+		readFile();
 	}
 	
 	private void setDefaults()
@@ -73,7 +74,7 @@ public class SARSA
 		}
 	}
 	
-	private void loadFile()
+	private void readFile()
 	{
 		tryToReadFile();
 	}
@@ -93,7 +94,7 @@ public class SARSA
 	private void readFile(Scanner scan)
 	{
 		print(1, "* Reading "  + fileName + "...\n");
-		int pos = 0;
+		
 		ArrayList<Cell[]> board = new ArrayList<>();
 		
 		while(scan.hasNext())
@@ -109,11 +110,10 @@ public class SARSA
 			{
 				row[i] = new Cell(splitLine[i]);
 			}
-			
-			pos++;
+			board.add(row);
 		}
+		this.board = new Board(board.toArray(new Cell[board.size()][board.get(0).length]));
 	}
-	
 	
 	private void print(int verbosity, String message)
 	{

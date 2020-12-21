@@ -1,9 +1,7 @@
-import java.awt.Point;
 
 public class Board 
 {
 	Cell[][] board;
-	Point agentPos;
 	
 	public Board(Cell[][] board)
 	{
@@ -13,5 +11,15 @@ public class Board
 	public Cell getCell(int x, int y)
 	{
 		return board[x][y];
+	}
+	
+	public int width()
+	{
+		return board.length;
+	}
+	
+	public int height()
+	{
+		return board[0].length;
 	}
 }
