@@ -1,3 +1,4 @@
+import java.awt.Point;
 import java.util.HashMap;
 
 public class Cell 
@@ -5,13 +6,15 @@ public class Cell
 	public enum CellType { START, GOAL, EMPTY, MINE, CLIFF };
 	
 	private CellType type;
+	private Point cellLocation;
 	
 	private HashMap<Action, Double> actionQ;
 
-	public Cell(String cell)
+	public Cell(String cell, int x, int y)
 	{
 		this.type(stringToType(cell));
 		this.actionQ = new HashMap<>();
+		this.cellLocation = new Point(x,y);
 		actionQ.put(Action.UP, 0.0);
 		actionQ.put(Action.DOWN, 0.0);
 		actionQ.put(Action.LEFT, 0.0);
@@ -52,4 +55,13 @@ public class Cell
 		return actionQ;
 	}
 	
+	public int x()
+	{
+		return cellLocation.x;
+	}
+	
+	public int y()
+	{
+		return cellLocation.y;
+	}
 }

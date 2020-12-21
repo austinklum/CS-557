@@ -106,6 +106,7 @@ public class SARSA
 	{
 		print(1, "* Reading "  + fileName + "...\n");
 		ArrayList<Cell[]> board = new ArrayList<>();
+		int colCount = 0;
 		while(scan.hasNext())
 		{
 			String line = scan.nextLine();
@@ -117,9 +118,10 @@ public class SARSA
 			Cell[] row = new Cell[splitLine.length];
 			for (int i = 0; i < row.length; i++)
 			{
-				row[i] = new Cell(splitLine[i]);
+				row[i] = new Cell(splitLine[i], colCount, i);
 			}
 			board.add(row);
+			colCount++;
 		}
 		this.board = new Board(board.toArray(new Cell[board.size()][board.get(0).length]));
 	}
@@ -134,7 +136,7 @@ public class SARSA
 			int iteration = 0;
 			while (iteration < board.getMaxIterations())
 			{
-				// Cell nextState = execute(action);
+				Cell nextState = execute(state, action);
 				// double reward = reward(state, action, nextState);
 				// Action nextAction = getGreedyAction(nextState);
 				// double newQ = calculateNewQ(state, action, nextState, nextAction)
@@ -143,6 +145,8 @@ public class SARSA
 			}
 		}
 	}
+
+
 
 	private void decay(int episodeCount) 
 	{
@@ -183,6 +187,31 @@ public class SARSA
 	        	.max(Comparator.comparingDouble(Map.Entry::getValue))
 	        	.get()
 	        	.getKey();
+	}
+	
+	private Cell execute(Cell state, Action action)
+	{
+		double rand = Math.random();
+
+		if (rand > successProbability)
+		{
+			return drift(state, action);
+		}
+		
+		return null;
+	}
+	
+	private Cell drift(Cell state, Action action)
+	{
+		if (action == Action.UP || action == Action.DOWN)
+		{
+			// left right drift
+			
+			
+		}
+		
+		// up down drift
+		return null;
 	}
 	
 	public void printBoard()
