@@ -1,8 +1,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Scanner;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class SARSA
 {
@@ -95,6 +94,8 @@ public class SARSA
 	{
 		print(1, "* Reading "  + fileName + "...\n");
 		int pos = 0;
+		ArrayList<Cell[]> board = new ArrayList<>();
+		
 		while(scan.hasNext())
 		{
 			String line = scan.nextLine();
@@ -102,18 +103,13 @@ public class SARSA
 			{
 				continue;
 			}
-			String[] lineArr = line.split("\\) \\(");
-			String[] attrString = lineArr[0].replace("(", "").split(" ");
-			String[] targetString = lineArr[1].replace(")", "").split(" ");
-			
-			Double[] attr = Stream.of(attrString).map(Double::valueOf).collect(Collectors.toList()).toArray(new Double[attrString.length]);
-			int targetPos = 0;
-			while(!targetString[targetPos].equals("1"))
+			String[] splitLine = line.split("");
+			Cell[] row = new Cell[splitLine.length];
+			for (int i = 0; i < row.length; i++)
 			{
-				targetPos++;
+				row[i] = new Cell(splitLine[i]);
 			}
 			
-			data.add(new DataSetRow(pos, attr, targetPos, targetString.length));
 			pos++;
 		}
 	}
