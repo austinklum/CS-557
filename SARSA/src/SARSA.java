@@ -121,8 +121,9 @@ public class SARSA
 	{
 		for (int i = 0; i < episodes; i++) 
 		{
+			decay(i);
 			Cell state = board.getAgentStart();
-			// Action action = getGreedyAction(state);
+			Action action = getGreedyAction(state);
 			int iteration = 0;
 			while (iteration < board.getMaxIterations())
 			{
@@ -134,6 +135,38 @@ public class SARSA
 				// action = nextAction;
 			}
 		}
+	}
+
+	private void decay(int episodeCount) 
+	{
+		if (episodeCount % learningRateDecay == 0)
+		{
+			updateLearningRate(episodeCount);
+		}
+		
+		if (episodeCount % epsilonDecay == 0)
+		{
+			updateEpsilon(episodeCount);
+		}
+	}
+	
+	private void updateLearningRate(int episodeCount)
+	{
+		double denominator = 1 + Math.floor(episodeCount / learningRateDecay);
+		learningRate = 0.9 / denominator;
+	}
+	
+	private void updateEpsilon(int episodeCount)
+	{
+		double denominator = 1 + Math.floor(episodeCount / epsilonDecay);
+		epsilon = 0.9 / denominator;
+	}
+	
+	private Action getGreedyAction(Cell state)
+	{
+		
+		
+		return null;
 	}
 	
 	public void printBoard()
