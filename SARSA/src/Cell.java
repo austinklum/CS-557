@@ -1,4 +1,4 @@
-import java.util.IllegalFormatException;
+import java.util.HashMap;
 
 public class Cell 
 {
@@ -6,18 +6,16 @@ public class Cell
 	
 	private CellType type;
 	
-	private double up;
-	private double down;
-	private double left;
-	private double right;
+	private HashMap<Action, Double> actionQ;
 
 	public Cell(String cell)
 	{
 		this.type(stringToType(cell));
-		up(0);
-		down(0);
-		left(0);
-		right(0);
+		this.actionQ = new HashMap<>();
+		actionQ.put(Action.UP, 0.0);
+		actionQ.put(Action.DOWN, 0.0);
+		actionQ.put(Action.LEFT, 0.0);
+		actionQ.put(Action.RIGHT, 0.0);
 	}
 	
 	private CellType stringToType(String cell)
@@ -48,37 +46,10 @@ public class Cell
 	{
 		this.type = type;
 	}
-
-	public double up() {
-		return up;
-	}
-
-	public void up(double up) {
-		this.up = up;
-	}
-
-	public double down() {
-		return down;
-	}
-
-	public void down(double down) {
-		this.down = down;
-	}
-
-	public double left() {
-		return left;
-	}
-
-	public void left(double left) {
-		this.left = left;
-	}
-
-	public double right() {
-		return right;
-	}
-
-	public void right(double right) {
-		this.right = right;
+	
+	public HashMap<Action, Double> actionQ()
+	{
+		return actionQ;
 	}
 	
 }

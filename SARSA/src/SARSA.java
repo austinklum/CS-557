@@ -1,7 +1,12 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 import java.util.Scanner;
+import java.util.Set;
 
 public class SARSA
 {
@@ -19,6 +24,7 @@ public class SARSA
 	private int verbosityLevel;
 	
 	private Board board;
+	private HashMap<Cell, Action> Q;
 	
 	public SARSA(String[] args)
 	{
@@ -40,6 +46,7 @@ public class SARSA
 		this.useQLearning = false;
 		this.useUnicodeCharacters = false;
 		this.verbosityLevel = 1;
+		this.Q = new HashMap<>();
 	}
 	
 	private void processCommandLineArgs(String[] args) 
@@ -123,7 +130,7 @@ public class SARSA
 		{
 			decay(i);
 			Cell state = board.getAgentStart();
-			Action action = getGreedyAction(state);
+			Action action = getAlmostGreedyAction(state);
 			int iteration = 0;
 			while (iteration < board.getMaxIterations())
 			{
@@ -162,11 +169,20 @@ public class SARSA
 		epsilon = 0.9 / denominator;
 	}
 	
-	private Action getGreedyAction(Cell state)
+	private Action getAlmostGreedyAction(Cell state)
 	{
+		if (Math.random() < epsilon)
+		{
+			Random random = new Random();
+			int size = state.actionQ().size();
+			return state.actionQ().keySet().toArray(new Action[size])[random.nextInt(size)];
+		}
 		
-		
-		return null;
+		Set<Map.Entry<Action, Double>> entrySet = state.actionQ().entrySet();
+		return  entrySet.stream()
+	        	.max(Comparator.comparingDouble(Map.Entry::getValue))
+	        	.get()
+	        	.getKey();
 	}
 	
 	public void printBoard()
