@@ -1,5 +1,4 @@
 import java.awt.Point;
-import java.awt.geom.Point2D;
 
 public class Board 
 {
@@ -10,6 +9,21 @@ public class Board
 	{
 		this.board = board;
 		setAgentStart();
+	}
+	
+	public Cell getCell(int x, int y)
+	{
+		return board[x][y];
+	}
+	
+	public int width()
+	{
+		return board.length;
+	}
+	
+	public int height()
+	{
+		return board[0].length;
 	}
 	
 	private void setAgentStart()
@@ -27,18 +41,13 @@ public class Board
 		}
 	}
 	
-	public Cell getCell(int x, int y)
+	public Cell getAgentStart()
 	{
-		return board[x][y];
+		return board[agentStart.x][agentStart.y];
 	}
 	
-	public int width()
+	public int getMaxIterations()
 	{
-		return board.length;
-	}
-	
-	public int height()
-	{
-		return board[0].length;
+		return this.width() * this.height();
 	}
 }

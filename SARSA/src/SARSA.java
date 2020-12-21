@@ -95,9 +95,7 @@ public class SARSA
 	private void readFile(Scanner scan)
 	{
 		print(1, "* Reading "  + fileName + "...\n");
-		
 		ArrayList<Cell[]> board = new ArrayList<>();
-		Cell agentStart = null;
 		while(scan.hasNext())
 		{
 			String line = scan.nextLine();
@@ -118,7 +116,21 @@ public class SARSA
 	
 	public void run() 
 	{
-		
+		for (int i = 0; i < episodes; i++) 
+		{
+			Cell state = board.getAgentStart();
+			// Action action = getGreedyAction(state);
+			int iteration = 0;
+			while (iteration < board.getMaxIterations())
+			{
+				// Cell nextState = execute(action);
+				// double reward = reward(state, action, nextState);
+				// Action nextAction = getGreedyAction(nextState);
+				// double newQ = calculateNewQ(state, action, nextState, nextAction)
+				// state = nextState;
+				// action = nextAction;
+			}
+		}
 	}
 	
 	private void print(int verbosity, String message)
