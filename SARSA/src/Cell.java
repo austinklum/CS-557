@@ -13,7 +13,7 @@ public class Cell
 
 	public Cell(String cell)
 	{
-		this.type = stringToType(cell);
+		this.type(stringToType(cell));
 	}
 	
 	private CellType stringToType(String cell)
@@ -33,6 +33,16 @@ public class Cell
 				return CellType.CLIFF;
 		}
 		throw new IllegalArgumentException(cellValue + " isn't a valid Cell");
+	}
+
+	public CellType type()
+	{
+		return type;
+	}
+
+	public void type(CellType type)
+	{
+		this.type = type;
 	}
 	
 }

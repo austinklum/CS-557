@@ -3,9 +3,11 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import Cell.CellType;
+
 public class SARSA
 {
-
+	
 	private String fileName;
 	private int learningRate;
 	private int learningRateDecay;
@@ -23,6 +25,7 @@ public class SARSA
 		setDefaults();
 		processCommandLineArgs(args);
 		readFile();
+		run();
 	}
 	
 	private void setDefaults()
@@ -76,19 +79,17 @@ public class SARSA
 	
 	private void readFile()
 	{
-		tryToReadFile();
-	}
-	
-	private void tryToReadFile()
-	{
-			Scanner scan;
-			try {
-				scan = new Scanner(new File(fileName));
-				readFile(scan);
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-				System.exit(-1);
-			}
+		Scanner scan;
+		try
+		{
+			scan = new Scanner(new File(fileName));
+			readFile(scan);
+		} 
+		catch (FileNotFoundException e)
+		{
+			e.printStackTrace();
+			System.exit(-1);
+		}
 	}
 	
 	private void readFile(Scanner scan)
@@ -96,7 +97,7 @@ public class SARSA
 		print(1, "* Reading "  + fileName + "...\n");
 		
 		ArrayList<Cell[]> board = new ArrayList<>();
-		
+		Cell agentStart = null;
 		while(scan.hasNext())
 		{
 			String line = scan.nextLine();
@@ -115,6 +116,11 @@ public class SARSA
 		this.board = new Board(board.toArray(new Cell[board.size()][board.get(0).length]));
 	}
 	
+	public void run() 
+	{
+		
+	}
+	
 	private void print(int verbosity, String message)
 	{
 		if (verbosity <= verbosityLevel)
@@ -122,4 +128,6 @@ public class SARSA
 			System.out.print(message);
 		}
 	}
+
+
 }
