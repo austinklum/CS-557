@@ -7,8 +7,10 @@ public class SARSA
 {
 	
 	private String fileName;
-	private int learningRate;
+	private double learningRate;
 	private int learningRateDecay;
+	private double futureDiscount;
+	private double epsilon;
 	private int epsilonDecay;
 	private int episodes;
 	private double successProbability;
@@ -23,13 +25,16 @@ public class SARSA
 		setDefaults();
 		processCommandLineArgs(args);
 		readFile();
-		//run();
+		run();
 	}
 	
 	private void setDefaults()
 	{
+		this.learningRate = .9;
 		this.learningRateDecay = 1000;
+		this.epsilon = .9;
 		this.epsilonDecay = 200;
+		this.futureDiscount = .9;
 		this.episodes = 10000;
 		this.successProbability = .8;
 		this.useQLearning = false;
