@@ -11,6 +11,19 @@ public class Board
 		setAgentStart();
 	}
 	
+	public void printBoard()
+	{
+		for (int x = 0; x < board.length; x++)
+		{
+			for (int y = 0; y < board[0].length; y++) 
+			{
+				System.out.print(getCell(x,y).type() + " ");
+			}
+			System.out.println();
+		}
+	}
+	
+	
 	public Cell getCell(int x, int y)
 	{
 		return board[x][y];

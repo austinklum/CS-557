@@ -3,8 +3,6 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-import Cell.CellType;
-
 public class SARSA
 {
 	
@@ -25,7 +23,7 @@ public class SARSA
 		setDefaults();
 		processCommandLineArgs(args);
 		readFile();
-		run();
+		//run();
 	}
 	
 	private void setDefaults()
@@ -131,6 +129,11 @@ public class SARSA
 				// action = nextAction;
 			}
 		}
+	}
+	
+	public void printBoard()
+	{
+		board.printBoard();
 	}
 	
 	private void print(int verbosity, String message)
