@@ -219,11 +219,7 @@ public class SARSA
 			return state.actionQ().keySet().toArray(new Action[size])[random.nextInt(size)];
 		}
 		
-		Set<Map.Entry<Action, Double>> entrySet = state.actionQ().entrySet();
-		return  entrySet.stream()
-	        	.max(Comparator.comparingDouble(Map.Entry::getValue))
-	        	.get()
-	        	.getKey();
+		return state.bestAction();
 	}
 	
 	private Cell execute(Cell state, Action action)
@@ -312,11 +308,7 @@ public class SARSA
 	{
 		if (this.useQLearning)
 		{
-			Set<Map.Entry<Action, Double>> entrySet = state.actionQ().entrySet();
-			return  state.actionQ(entrySet.stream()
-							        	.max(Comparator.comparingDouble(Map.Entry::getValue))
-							        	.get()
-							        	.getKey());
+			return state.actionQ(state.bestAction());
 		}
 		
 		return state.actionQ(action);
@@ -335,5 +327,9 @@ public class SARSA
 		}
 	}
 
+	public void printBoardActions()
+	{
+		
+	}
 
 }

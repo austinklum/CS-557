@@ -1,5 +1,10 @@
 import java.awt.Point;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class Cell 
 {
@@ -68,5 +73,43 @@ public class Cell
 	public int y()
 	{
 		return cellLocation.y;
+	}
+
+	public String getBestActionSet() 
+	{
+		Action bestAction = bestAction();
+		double bestQ = actionQ(bestAction);
+		
+		List<Action> actionSet = new LinkedList<Action>)();
+		String set = "";
+		for (Action action : actionQ.keySet())
+		{
+			if (actionQ(action) == bestQ)
+			{
+				set += action;
+			}
+		}
+		
+		if (actionSet.size() == 1)
+		{
+			return actionSet.get(0).getRepresentation();
+		}
+		
+		if (actionSet.size() == 2)
+		{
+			
+		}
+		
+		
+		return null;
+	}
+	
+	public Action bestAction()
+	{
+		Set<Map.Entry<Action, Double>> entrySet = actionQ().entrySet();
+		return entrySet.stream()
+			        	.max(Comparator.comparingDouble(Map.Entry::getValue))
+			        	.get()
+			        	.getKey();
 	}
 }
