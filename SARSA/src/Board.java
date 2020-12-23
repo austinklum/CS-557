@@ -85,18 +85,77 @@ public class Board
 				cell.actionQ().put(Action.RIGHT, 0.0);
 			}
 		}
+	}
 		
 
-	public void printBoardActions()
+	public void printBoardActions(boolean useUnicode)
 	{
 		for (int x = 0; x < board.length; x++) 
 		{
 			for (int y = 0; y < board[0].length; y++)
 			{
 				Cell cell = this.getCell(x, y);
-				Action action = cell.getBestActionSet();
+				if (cell.type() == Cell.CellType.EMPTY)
+				{
+					Action action = cell.getBestActionSet();
+					System.out.print(action.getRepresentation(useUnicode));
+				}
+				else
+				{
+					System.out.print(cell.typeChar());
+				}
 			}
+			System.out.println();
 		}
-		
 	}
+	
+	public void printBoardQ()
+	{
+		   for (int xx = 0; xx < board.length; xx++)
+		   {
+	            System.out.print("-");
+	            
+	            for (int y = 0; y < board[0].length; y++)
+	            {
+	                System.out.print("------------");
+	            }
+	            
+	            System.out.println();
+
+	            System.out.print("|");
+	            for (int y = 0; y < board[0].length; y++) 
+	            {
+	                System.out.printf("  %6.1f   |", getCell(xx,y).actionQ(Action.UP));
+	            }
+	            System.out.println();
+
+	            System.out.print("|");
+	            for (int y = 0; y < board[0].length; y++) 
+	            {
+	                System.out.printf("%6.1f     |", getCell(xx,y).actionQ(Action.LEFT));
+	            }
+	            System.out.println();
+
+	            System.out.print("|");
+	            for (int y = 0; y < board[0].length; y++)
+	            {
+	                System.out.printf("     %6.1f|", getCell(xx,y).actionQ(Action.RIGHT));
+	            }
+	            System.out.println();
+
+	            System.out.print("|");
+	            for (int y = 0; y < board[0].length; y++) 
+	            {
+	                System.out.printf("  %6.1f   |", getCell(xx,y).actionQ(Action.DOWN));
+	            }
+	            System.out.println();
+	        }
+	        System.out.print("-");
+	        for (int y = 0; y < board[0].length; y++) 
+	        {
+	            System.out.print("------------");
+	        }
+	        System.out.println();
+	}
+	
 }

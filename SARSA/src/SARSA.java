@@ -41,7 +41,7 @@ public class SARSA
 		this.epsilon = .9;
 		this.epsilonDecay = 200;
 		this.futureDiscount = .9;
-		this.episodes = 100;
+		this.episodes = 10000;
 		this.successProbability = .8;
 		this.useQLearning = false;
 		this.useUnicodeCharacters = false;
@@ -128,15 +128,17 @@ public class SARSA
 	public void run() 
 	{
 		print(1, "* Beginning " + episodes + " learning episodes with " + (this.useQLearning ? "Q-Learning" : "SARSA") + "...\n");
+		print(3, "  *                    Avg. Total Reward for\n");
+		print(3, "  * # Episodes         Current Greedy Policy\n");
 		int totalReward = 0;
 		for (int i = 0; i < episodes; i++) 
 		{
 			decay(i);
-			board.resetBoard();
+			//board.resetBoard();
 			Cell state = board.getAgentStart();
 			Action action = getAlmostGreedyAction(state);
 			int iteration = 0;
-			while (iteration < board.getMaxIterations())
+			while (iteration < board.getMaxIterations() && state.type() != Cell.CellType.GOAL && state.type() != Cell.CellType.MINE)
 			{
 				Cell nextState = execute(state, action);
 				Action nextAction = getAlmostGreedyAction(nextState);
@@ -150,16 +152,19 @@ public class SARSA
 				action = nextAction;
 				iteration++;
 			}
-			if (episodes + 1 % 100 == 0)
+			if (i % 100 == 0 && i != 0)
 			{
 				double avgReward = testRun();
+				print(3,  "           " + i + "          " + avgReward + "\n");
 			}
 		}
 		
 		double avgReward = testRun();
+		print(3,  "           " + episodes + "          " + avgReward + "\n");
 		print(1, "* Avg. Total Reward of Learned Policy: " + avgReward + "\n");
 		print(1, "* Learned greedy policy: \n" );
 		printBoardActions();
+		printBoardQ();
 	}
 	
 	public double testRun() 
@@ -170,7 +175,7 @@ public class SARSA
 			Cell state = board.getAgentStart();
 			Action action = getAlmostGreedyAction(state);
 			int iteration = 0;
-			while (iteration < board.getMaxIterations())
+			while (iteration < board.getMaxIterations()  && state.type() != Cell.CellType.GOAL && state.type() != Cell.CellType.MINE)
 			{
 				Cell nextState = execute(state, action);
 				Action nextAction = getAlmostGreedyAction(nextState);
@@ -202,17 +207,19 @@ public class SARSA
 	{
 		double denominator = 1 + Math.floor(episodeCount / learningRateDecay);
 		learningRate = 0.9 / denominator;
+		print(4, "           (after episode " + episodeCount + ", alpha to " + learningRate + ")\n");
 	}
 	
 	private void updateEpsilon(int episodeCount)
 	{
 		double denominator = 1 + Math.floor(episodeCount / epsilonDecay);
 		epsilon = 0.9 / denominator;
+		print(4, "           (after episode " + episodeCount + ", epsilon to " + epsilon + ")\n");
 	}
 	
 	private Action getAlmostGreedyAction(Cell state)
 	{
-		if (Math.random() < epsilon)
+		if (Math.random() <= epsilon)
 		{
 			Random random = new Random();
 			int size = state.actionQ().size();
@@ -238,7 +245,14 @@ public class SARSA
 			return state;
 		}
 		
-		return board.getCell(newPoint.x, newPoint.y);
+		Cell nextState = board.getCell(newPoint.x, newPoint.y);
+		
+		if (nextState.type() == Cell.CellType.CLIFF)
+		{
+			return board.getAgentStart();
+		}
+		
+		return nextState;
 	}
 
 	private Point drift(Point newPoint, Action action)
@@ -297,7 +311,7 @@ public class SARSA
 	private double calculateNewQ(Cell state, Action action, Cell nextState, Action nextAction)
 	{
 		double Q = state.actionQ(action);
-		int reward = reward(state);
+		int reward = reward(nextState);
 		double learnFactor = getLearnFactor(nextState, nextAction);
 		double discountedQ = (futureDiscount * learnFactor);
 		double learnedPart = learningRate * (reward + discountedQ - Q );
@@ -329,7 +343,15 @@ public class SARSA
 
 	public void printBoardActions()
 	{
-		
+		board.printBoardActions(useUnicodeCharacters);
+	}
+	
+	public void printBoardQ()
+	{
+		if (verbosityLevel >= 2)
+		{
+			board.printBoardQ();
+		}
 	}
 
 }

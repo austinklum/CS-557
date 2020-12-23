@@ -1,6 +1,7 @@
 import java.awt.Point;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -13,12 +14,12 @@ public class Cell
 	private CellType type;
 	private Point cellLocation;
 	
-	private HashMap<Action, Double> actionQ;
+	private LinkedHashMap<Action, Double> actionQ;
 
 	public Cell(String cell, int x, int y)
 	{
 		this.type(stringToType(cell));
-		this.actionQ = new HashMap<>();
+		this.actionQ = new LinkedHashMap<>();
 		this.cellLocation = new Point(x,y);
 		actionQ.put(Action.UP, 0.0);
 		actionQ.put(Action.DOWN, 0.0);
@@ -45,6 +46,25 @@ public class Cell
 		throw new IllegalArgumentException(cellValue + " isn't a valid Cell");
 	}
 
+	public char typeChar()
+	{
+		switch (type())
+		{
+			case START:
+				return 'S';
+			case GOAL:
+				return 'G';
+			case EMPTY:
+				return '_';
+			case MINE:
+				return 'M';
+			case CLIFF:
+				return 'C';
+			default:
+				return 'F';
+		}
+	}
+	
 	public CellType type()
 	{
 		return type;
@@ -75,33 +95,22 @@ public class Cell
 		return cellLocation.y;
 	}
 
-	public String getBestActionSet() 
+	public Action getBestActionSet() 
 	{
 		Action bestAction = bestAction();
 		double bestQ = actionQ(bestAction);
 		
-		List<Action> actionSet = new LinkedList<Action>)();
-		String set = "";
+		List<Action> actionSet = new LinkedList<Action>();
+		String set = "" + bestAction;
 		for (Action action : actionQ.keySet())
 		{
-			if (actionQ(action) == bestQ)
+			if (actionQ(action) == bestQ && action != bestAction)
 			{
-				set += action;
+				set += "_" + action;
 			}
 		}
 		
-		if (actionSet.size() == 1)
-		{
-			return actionSet.get(0).getRepresentation();
-		}
-		
-		if (actionSet.size() == 2)
-		{
-			
-		}
-		
-		
-		return null;
+		return Action.valueOf(set);
 	}
 	
 	public Action bestAction()
@@ -111,5 +120,10 @@ public class Cell
 			        	.max(Comparator.comparingDouble(Map.Entry::getValue))
 			        	.get()
 			        	.getKey();
+	}
+	
+	public String toString()
+	{
+		return this.typeChar() + " : " + this.x() + ", " + this.y();
 	}
 }
