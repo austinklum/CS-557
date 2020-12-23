@@ -25,7 +25,6 @@ public class SARSA
 	private int verbosityLevel;
 	
 	private Board board;
-	private HashMap<Cell, Action> Q;
 	
 	public SARSA(String[] args)
 	{
@@ -47,7 +46,6 @@ public class SARSA
 		this.useQLearning = false;
 		this.useUnicodeCharacters = false;
 		this.verbosityLevel = 1;
-		this.Q = new HashMap<>();
 	}
 	
 	private void processCommandLineArgs(String[] args) 
@@ -129,9 +127,12 @@ public class SARSA
 	
 	public void run() 
 	{
+		print(1, "* Beginning " + episodes + " learning episodes with " + (this.useQLearning ? "Q-Learning" : "SARSA") + "...\n");
+		int totalReward = 0;
 		for (int i = 0; i < episodes; i++) 
 		{
 			decay(i);
+			board.resetBoard();
 			Cell state = board.getAgentStart();
 			Action action = getAlmostGreedyAction(state);
 			int iteration = 0;
@@ -140,13 +141,45 @@ public class SARSA
 				Cell nextState = execute(state, action);
 				Action nextAction = getAlmostGreedyAction(nextState);
 				
+				totalReward += reward(nextState);
+			
 				double newQ = calculateNewQ(state, action, nextState, nextAction);
 				state.actionQ().put(action, newQ); 
 				
 				state = nextState;
 				action = nextAction;
 			}
+			if (episodes % 100 == 0)
+			{
+				double avgReward = testRun();
+			}
 		}
+		
+		double avgReward = testRun();
+		print(1, "* Avg. Total Reward of Learned Policy: " + avgReward + "\n");
+		print(1, "* Learned greedy policy: \n" );
+	}
+	
+	public double testRun() 
+	{
+		int totalReward = 0;
+		for (int i = 0; i < 50; i++) 
+		{
+			Cell state = board.getAgentStart();
+			Action action = getAlmostGreedyAction(state);
+			int iteration = 0;
+			while (iteration < board.getMaxIterations())
+			{
+				Cell nextState = execute(state, action);
+				Action nextAction = getAlmostGreedyAction(nextState);
+				
+				totalReward += reward(nextState);
+				
+				state = nextState;
+				action = nextAction;
+			}
+		}
+		return (double)totalReward / 50.0;
 	}
 
 	private void decay(int episodeCount) 
@@ -267,7 +300,7 @@ public class SARSA
 		double Q = state.actionQ(action);
 		int reward = reward(state);
 		double learnFactor = getLearnFactor(nextState, nextAction);
-		double discountedQ = (epsilon * learnFactor);
+		double discountedQ = (futureDiscount * learnFactor);
 		double learnedPart = learningRate * (reward + discountedQ - Q );
 		return Q + learnedPart;
 	}

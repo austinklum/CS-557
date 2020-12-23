@@ -71,4 +71,21 @@ public class Board
 	{
 		return this.width() * this.height();
 	}
+	
+	public void resetBoard()
+	{
+		for (int x = 0; x < board.length; x++) 
+		{
+			for (int y = 0; y < board[0].length; y++)
+			{
+				Cell cell = this.getCell(x, y);
+				cell.actionQ().put(Action.UP, 0.0);
+				cell.actionQ().put(Action.DOWN, 0.0);
+				cell.actionQ().put(Action.LEFT, 0.0);
+				cell.actionQ().put(Action.RIGHT, 0.0);
+			}
+		}
+		
+		
+	}
 }
