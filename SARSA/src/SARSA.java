@@ -41,7 +41,7 @@ public class SARSA
 		this.epsilon = .9;
 		this.epsilonDecay = 200;
 		this.futureDiscount = .9;
-		this.episodes = 10000;
+		this.episodes = 100;
 		this.successProbability = .8;
 		this.useQLearning = false;
 		this.useUnicodeCharacters = false;
@@ -148,8 +148,9 @@ public class SARSA
 				
 				state = nextState;
 				action = nextAction;
+				iteration++;
 			}
-			if (episodes % 100 == 0)
+			if (episodes + 1 % 100 == 0)
 			{
 				double avgReward = testRun();
 			}
@@ -158,6 +159,7 @@ public class SARSA
 		double avgReward = testRun();
 		print(1, "* Avg. Total Reward of Learned Policy: " + avgReward + "\n");
 		print(1, "* Learned greedy policy: \n" );
+		printBoardActions();
 	}
 	
 	public double testRun() 
@@ -177,6 +179,7 @@ public class SARSA
 				
 				state = nextState;
 				action = nextAction;
+				iteration++;
 			}
 		}
 		return (double)totalReward / 50.0;
