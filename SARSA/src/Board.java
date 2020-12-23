@@ -11,6 +11,14 @@ public class Board
 		setAgentStart();
 	}
 	
+	public boolean inBounds(int x, int y)
+	{
+		if (x < 0 || y < 0) return false;
+		if (x >= width() || y >= height()) return false;
+		
+		return true;
+	}
+	
 	public void printBoard()
 	{
 		for (int x = 0; x < board.length; x++)

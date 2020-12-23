@@ -1,3 +1,4 @@
+import java.awt.Point;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -193,25 +194,57 @@ public class SARSA
 	{
 		double rand = Math.random();
 
+		Point newPoint = getNewPoint(state.x(), state.y(), action);
+		
 		if (rand > successProbability)
 		{
-			return drift(state, action);
+			newPoint = drift(newPoint, action);
 		}
 		
-		return null;
+		if (!board.inBounds(newPoint.x, newPoint.y))
+		{
+			return state;
+		}
+		
+		return board.getCell(newPoint.x, newPoint.y);
 	}
-	
-	private Cell drift(Cell state, Action action)
+
+	private Point drift(Point newPoint, Action action)
 	{
 		if (action == Action.UP || action == Action.DOWN)
 		{
-			// left right drift
-			
+			if (Math.random() >= .5)
+			{ // Drift Left
+				return new Point(newPoint.x - 1, newPoint.y);
+			}
+			// Drift Right
+			return new Point(newPoint.x - 1, newPoint.y);
 			
 		}
 		
-		// up down drift
-		return null;
+		if (Math.random() >= .5)
+		{ // Drift Up
+			return new Point(newPoint.x, newPoint.y - 1);
+		}
+		// Drift down
+		return new Point(newPoint.x, newPoint.y + 1);
+	}
+	
+	private Point getNewPoint(int x, int y, Action action)
+	{
+		switch (action)
+		{
+			case DOWN:
+				return new Point(x, y + 1);
+			case UP:
+				return new Point(x, y - 1);
+			case LEFT:
+				return new Point(x - 1, y);
+			case RIGHT:
+				return new Point(x + 1, y);
+			default:
+				return new Point(x,y);
+		}
 	}
 	
 	public void printBoard()
