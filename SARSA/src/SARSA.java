@@ -138,16 +138,16 @@ public class SARSA
 			while (iteration < board.getMaxIterations())
 			{
 				Cell nextState = execute(state, action);
-				// double reward = reward(state, action, nextState);
-				// Action nextAction = getGreedyAction(nextState);
-				// double newQ = calculateNewQ(state, action, nextState, nextAction)
-				// state = nextState;
-				// action = nextAction;
+				Action nextAction = getAlmostGreedyAction(nextState);
+				
+				double newQ = calculateNewQ(state, action, nextState, nextAction);
+				state.actionQ().put(action, newQ); 
+				
+				state = nextState;
+				action = nextAction;
 			}
 		}
 	}
-
-
 
 	private void decay(int episodeCount) 
 	{
@@ -245,6 +245,41 @@ public class SARSA
 			default:
 				return new Point(x,y);
 		}
+	}
+	
+	private int reward(Cell nextState)
+	{
+		switch (nextState.type())
+		{
+			case GOAL:
+				return 0;
+			case MINE:
+				return -100;
+			case CLIFF:
+				return -20;
+			default:
+				return -1;
+		}
+	}
+	
+	private double calculateNewQ(Cell state, Action action, Cell nextState, Action nextAction)
+	{
+		double Q = state.actionQ(action);
+		int reward = reward(state);
+		double learnFactor = getLearnFactor(nextState, nextAction);
+		double discountedQ = (epsilon * learnFactor);
+		double learnedPart = learningRate * (reward + discountedQ - Q );
+		return Q + learnedPart;
+	}
+	
+	private double getLearnFactor(Cell state, Action action)
+	{
+		if (this.useQLearning)
+		{
+			return -1;
+		}
+		
+		return state.actionQ(action);
 	}
 	
 	public void printBoard()

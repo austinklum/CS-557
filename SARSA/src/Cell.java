@@ -50,6 +50,11 @@ public class Cell
 		this.type = type;
 	}
 	
+	public double actionQ(Action action)
+	{
+		return actionQ.get(action);
+	}
+	
 	public HashMap<Action, Double> actionQ()
 	{
 		return actionQ;
