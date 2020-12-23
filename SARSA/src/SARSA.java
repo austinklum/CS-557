@@ -276,7 +276,11 @@ public class SARSA
 	{
 		if (this.useQLearning)
 		{
-			return -1;
+			Set<Map.Entry<Action, Double>> entrySet = state.actionQ().entrySet();
+			return  state.actionQ(entrySet.stream()
+							        	.max(Comparator.comparingDouble(Map.Entry::getValue))
+							        	.get()
+							        	.getKey());
 		}
 		
 		return state.actionQ(action);
